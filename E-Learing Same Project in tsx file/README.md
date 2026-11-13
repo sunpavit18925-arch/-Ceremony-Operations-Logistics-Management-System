@@ -90,9 +90,9 @@ flowchart TD
 
 ### คำสั่งเริ่มต้น (One-Command Setup)
 
-1. เข้าสู่โฟลเดอร์โปรเจกต์ `portfolio-demo`:
+1. เข้าสู่โฟลเดอร์โปรเจกต์ `E-Learing Same Project in tsx file`:
    ```bash
-   cd portfolio-demo
+   cd "E-Learing Same Project in tsx file"
    ```
 
 2. ติดตั้ง Dependencies ทั้ง Frontend และ Backend:
@@ -116,7 +116,7 @@ flowchart TD
 รันชุดทดสอบ Backend API & State Transitions ด้วย Node.js Test Runner:
 
 ```bash
-cd portfolio-demo/backend
+cd "E-Learing Same Project in tsx file/backend"
 npm test
 ```
 
