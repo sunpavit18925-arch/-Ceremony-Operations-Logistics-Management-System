@@ -1,0 +1,37 @@
+# Environment configuration
+.env
+.env.backup
+.env.*.local
+
+# Real database dumps containing sensitive agency records
+pabpla (27).sql
+*.sql.gz
+*.sql.bak
+*.bak
+
+# Exception: allow clean repository schema and synthetic seeds
+!database/*.sql
+
+# Uploaded documents (retain directory protection and gitkeeps)
+uploads/documents/*
+!uploads/documents/.htaccess
+!uploads/documents/.gitkeep
+
+uploads/meetings/*
+!uploads/meetings/.htaccess
+!uploads/meetings/.gitkeep
+
+# Error logs and temp files
+*.log
+error_log
+php_errors.log
+
+# Operating System & IDE artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+

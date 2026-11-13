@@ -1,0 +1,18 @@
+{
+  "name": "pabpla-ceremony-portfolio-demo",
+  "version": "1.0.0",
+  "description": "Full Stack Migration of Pabpla Ceremony Management System for Portfolio Demonstration",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "node start-demo.js",
+    "test:backend": "npm --prefix backend test",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend"
+  },
+  "devDependencies": {}
+}
+

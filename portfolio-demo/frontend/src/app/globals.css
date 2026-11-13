@@ -1,0 +1,495 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+  --app-page-bg: #f0f2f5;
+  --app-surface: #ffffff;
+  --app-muted-bg: #f8fafc;
+  --app-text: #3f4254;
+  --app-muted: #64748b;
+  --app-heading: #1e3c72;
+  --app-border: #e2e8f0;
+  --app-hover-bg: #f8fafc;
+  --app-navbar-bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  --app-login-bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  --app-welcome-bg: linear-gradient(135deg, #1d976c 0%, #11998e 100%);
+  --app-page-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+}
+
+html[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --app-page-bg: #0f172a;
+  --app-surface: #1e293b;
+  --app-muted-bg: #172235;
+  --app-text: #e2e8f0;
+  --app-muted: #a8b6ca;
+  --app-heading: #a9c7ff;
+  --app-border: #3b4b63;
+  --app-hover-bg: #29384e;
+  --app-navbar-bg: linear-gradient(135deg, #080f1e, #152638, #1b3545);
+  --app-login-bg: linear-gradient(135deg, #080f1e, #152638, #1b3545);
+  --app-welcome-bg: linear-gradient(135deg, #0b201f, #123b37);
+  --app-page-gradient: linear-gradient(135deg, #0f172a, #17283b);
+  --bs-body-color: var(--app-text);
+  --bs-body-bg: var(--app-surface);
+  --bs-heading-color: var(--app-text);
+  --bs-emphasis-color: #f1f5f9;
+  --bs-secondary-color: var(--app-muted);
+  --bs-tertiary-color: var(--app-muted);
+  --bs-secondary-bg: var(--app-hover-bg);
+  --bs-tertiary-bg: var(--app-muted-bg);
+  --bs-border-color: var(--app-border);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Prompt', sans-serif;
+  background-color: var(--app-page-bg);
+  color: var(--app-text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  flex: 1 0 auto;
+  padding-bottom: 5.5rem;
+}
+
+/* Original Navbar styling from PHP menu.php */
+.custom-navbar {
+  background: var(--app-navbar-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 0.75rem 1rem;
+  position: sticky !important;
+  top: 0 !important;
+  width: 100% !important;
+  z-index: 1030 !important;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-family: 'Prompt', sans-serif;
+  color: #ffffff !important;
+}
+
+.nav-link {
+  font-weight: 400;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px;
+  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.nav-link:hover, .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+}
+
+/* เมนู Role Admin จัดให้อยู่ตรงกลางของ Navbar (ตรงตาม PHP menu.php) */
+@media (min-width: 992px) {
+  .custom-navbar .container-fluid {
+    position: relative;
+  }
+  .custom-navbar .navbar-nav-admin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    z-index: 1025;
+    list-style: none;
+    padding-left: 0;
+  }
+  .custom-navbar .navbar-nav-admin .nav-link {
+    white-space: nowrap;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .custom-navbar .navbar-nav-admin .nav-link {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+@media (max-width: 991.98px) {
+  .custom-navbar .navbar-nav-admin {
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0 1rem 0 !important;
+    padding-left: 0;
+    list-style: none;
+  }
+  .custom-navbar .navbar-nav-admin .nav-item {
+    margin-bottom: 0.35rem;
+  }
+  .custom-navbar .navbar-nav-admin .nav-link {
+    display: inline-block;
+    width: 100%;
+    padding: 0.6rem 1rem !important;
+  }
+}
+
+/* Original Hero Section from PHP home_admin.php */
+.hero-section {
+  background-color: #1e293b;
+  padding: 3.5rem 0;
+  text-align: center;
+  border-bottom: 4px solid #eab308;
+  margin-bottom: 2.5rem;
+}
+
+.hero-title {
+  color: #facc15;
+  font-weight: 700;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero-subtitle {
+  color: #ffffff;
+  font-weight: 400;
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 0;
+}
+
+/* Shared COMS identity: ceremonial pavilion and connected logistics route. */
+.coms-logo {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+.coms-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.coms-brand-copy {
+  min-width: 0;
+}
+
+.coms-brand--hero {
+  justify-content: center;
+  max-width: 960px;
+  margin-inline: auto;
+  text-align: left;
+}
+
+.coms-brand-kicker {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #c3d4df;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+}
+
+.coms-brand--hero .hero-title {
+  margin-bottom: 0;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.coms-brand--login,
+.coms-brand--welcome {
+  width: 100%;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.coms-brand-name {
+  margin-bottom: 0.4rem;
+  color: var(--app-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.coms-brand-system-name {
+  max-width: 36ch;
+  margin: 0 auto;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+@media (max-width: 575.98px) {
+  .coms-brand--hero {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .coms-brand--hero .coms-logo {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+/* Original Role Cards from home_admin.php */
+.role-card {
+  display: block;
+  background-color: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--app-text);
+  transition: all 0.2s ease;
+  height: 100%;
+  position: relative;
+}
+
+.role-card:hover {
+  background-color: var(--app-hover-bg);
+  border-color: #eab308;
+  color: var(--bs-emphasis-color);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.role-icon {
+  font-size: 2.5rem;
+  color: var(--app-muted);
+  margin-bottom: 1rem;
+}
+
+.role-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Original Card & Table Custom Styles from admin2.php & admin.css */
+.custom-card {
+  border: none;
+  border-radius: 1.25rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08);
+  background: var(--app-surface);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.card-header-custom {
+  background-color: transparent;
+  border-bottom: 1px solid var(--app-border);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  border-radius: 12px 12px 0 0;
+}
+
+.table-custom thead th {
+  background-color: var(--app-muted-bg);
+  color: var(--app-text);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: none;
+  padding: 1rem;
+}
+
+.table-custom tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.btn-primary-gradient {
+  background: linear-gradient(45deg, #2a5298, #1e3c72);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+  color: white;
+}
+
+/* Footer from PHP footer.php */
+.main-footer {
+  background: var(--app-navbar-bg);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 1.5rem 0;
+  font-family: 'Prompt', sans-serif;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.footer-text {
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* Bootstrap utilities have fixed light colors; keep them in the shared theme. */
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--app-surface) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--app-muted-bg) !important;
+}
+
+[data-bs-theme="dark"] .text-dark:not(.bg-warning, .bg-info, .btn-warning, .btn-info),
+[data-bs-theme="dark"] .text-black {
+  color: var(--app-text) !important;
+}
+
+[data-bs-theme="dark"] .bg-info.bg-opacity-25.text-dark {
+  color: var(--bs-info-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-primary {
+  color: var(--bs-primary-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-secondary {
+  color: var(--app-muted) !important;
+}
+
+[data-bs-theme="dark"] .text-success {
+  color: var(--bs-success-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-danger {
+  color: var(--bs-danger-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .table {
+  --bs-table-color: var(--app-text);
+  --bs-table-bg: var(--app-surface);
+  --bs-table-border-color: var(--app-border);
+  --bs-table-striped-color: var(--app-text);
+  --bs-table-striped-bg: rgba(168, 182, 202, 0.05);
+  --bs-table-hover-color: var(--app-text);
+  --bs-table-hover-bg: var(--app-hover-bg);
+  --bs-table-active-color: var(--app-text);
+  --bs-table-active-bg: var(--app-hover-bg);
+}
+
+[data-bs-theme="dark"] .table-light {
+  --bs-table-color: var(--app-text);
+  --bs-table-bg: var(--app-muted-bg);
+  --bs-table-border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .table-primary {
+  --bs-table-color: var(--bs-primary-text-emphasis);
+  --bs-table-bg: var(--bs-primary-bg-subtle);
+  --bs-table-border-color: var(--bs-primary-border-subtle);
+}
+
+[data-bs-theme="dark"] .btn-light {
+  --bs-btn-color: var(--app-text);
+  --bs-btn-bg: var(--app-muted-bg);
+  --bs-btn-border-color: var(--app-border);
+  --bs-btn-hover-color: var(--app-text);
+  --bs-btn-hover-bg: var(--app-hover-bg);
+  --bs-btn-hover-border-color: var(--app-border);
+  --bs-btn-active-color: var(--app-text);
+  --bs-btn-active-bg: var(--app-hover-bg);
+  --bs-btn-active-border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+  --bs-btn-color: var(--bs-primary-text-emphasis);
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+  --bs-btn-color: var(--app-muted);
+}
+
+[data-bs-theme="dark"] .btn-outline-success {
+  --bs-btn-color: var(--bs-success-text-emphasis);
+}
+
+[data-bs-theme="dark"] .btn-outline-danger {
+  --bs-btn-color: var(--bs-danger-text-emphasis);
+}
+
+[data-bs-theme="dark"] .role-btn-admin {
+  --bs-btn-color: #e9ecef;
+  --bs-btn-border-color: #adb5bd;
+  --bs-btn-hover-color: #212529;
+  --bs-btn-hover-bg: #e9ecef;
+  --bs-btn-hover-border-color: #e9ecef;
+  --bs-btn-active-color: #212529;
+  --bs-btn-active-bg: #dee2e6;
+  --bs-btn-active-border-color: #dee2e6;
+  --bs-btn-focus-shadow-rgb: 233, 236, 239;
+}
+
+.theme-toggle {
+  position: fixed;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  z-index: 1040;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--app-hover-bg);
+  border-color: var(--app-muted);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--bs-primary-text-emphasis);
+  outline-offset: 3px;
+}
+
+.theme-toggle-to-dark,
+.theme-toggle-to-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.theme-toggle-to-light,
+[data-bs-theme="dark"] .theme-toggle-to-dark {
+  display: none;
+}
+
+[data-bs-theme="dark"] .theme-toggle-to-light {
+  display: inline-flex;
+}
+
+@media (max-width: 575.98px) {
+  .theme-toggle {
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding: 0.6rem 0.85rem;
+  }
+}

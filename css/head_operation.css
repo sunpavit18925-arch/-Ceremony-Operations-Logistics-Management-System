@@ -1,0 +1,160 @@
+ body {
+        font-family: 'Prompt', sans-serif;
+        background-color: #f0f2f5;
+        color: #2c3e50;
+    }
+
+    /* Card Design */
+    .card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .bg-primary-custom {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+
+    /* Table Design */
+    .table-custom {
+        margin-bottom: 0;
+    }
+
+    .table-custom thead th {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        text-align: center;
+    }
+
+    .table-custom tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background-color 0.2s ease;
+    }
+
+    .table-custom tbody tr:hover td {
+        background-color: #f8faff;
+    }
+
+    /* Typography & Badges */
+    .doc-title {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 1.05rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .doc-desc {
+        font-size: 0.85rem;
+        color: #64748b;
+        line-height: 1.4;
+    }
+
+    .badge-user {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        padding: 0.5rem 0.9rem;
+        border-radius: 50rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* Form Controls */
+    .forward-wrapper {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 0.4rem;
+        transition: border-color 0.2s;
+    }
+
+    .forward-wrapper:focus-within {
+        border-color: #2a5298;
+        background-color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.1);
+    }
+    
+    /* สไตล์สำหรับสถานะมอบหมายงานสำเร็จ */
+    .forward-wrapper.assigned {
+        background-color: #ecfdf5;
+        border-color: #a7f3d0;
+    }
+
+    .forward-wrapper.assigned select:disabled {
+        color: #059669;
+        font-weight: 500;
+        cursor: not-allowed;
+    }
+
+    .forward-select {
+        font-size: 0.9rem;
+        border: none;
+        background-color: transparent;
+        box-shadow: none !important;
+    }
+
+    .btn-forward {
+        border-radius: 8px;
+        padding: 0.4rem 1rem;
+        font-weight: 500;
+        background: #2a5298;
+        color: white;
+        border: none;
+        transition: all 0.2s;
+        min-width: 70px;
+        justify-content: center;
+    }
+
+    .btn-forward:hover {
+        background: #1e3c72;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(30, 60, 114, 0.25);
+        color: white;
+    }
+    
+    .btn-forward:disabled {
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Pagination */
+    .pagination {
+        gap: 0.3rem;
+    }
+
+    .page-link {
+        border-radius: 8px !important;
+        border: none;
+        color: #2a5298;
+        font-weight: 500;
+        padding: 0.5rem 0.85rem;
+    }
+
+    .page-item.active .page-link {
+        background-color: #2a5298;
+        color: white;
+        box-shadow: 0 4px 8px rgba(42, 82, 152, 0.2);
+    }
+
+    /* Alert */
+    .alert-custom {
+        border-radius: 16px;
+        background-color: #d1e7dd;
+        color: #0a3622;
+        border: none;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.1);
+    }

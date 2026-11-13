@@ -1,0 +1,6 @@
+# Deny direct web access to uploaded meeting documents
+Require all denied
+<FilesMatch ".*">
+    Require all denied
+</FilesMatch>
+
