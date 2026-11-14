@@ -49,7 +49,7 @@ try {
 
     if (!$u_data) {
         session_destroy();
-        header('Location: login.php?error=user_not_found');
+        header('Location: index.php?error=user_not_found');
         exit();
     }
 

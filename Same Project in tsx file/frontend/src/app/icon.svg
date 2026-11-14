@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
+  <title>COMS — Ceremony Operations &amp; Logistics Management System</title>
+  <defs>
+    <linearGradient id="background" x1="8" y1="4" x2="88" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#183D4C"/>
+      <stop offset="1" stop-color="#0B1C2D"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="94" height="94" rx="24" fill="url(#background)"/>
+  <rect x="1.75" y="1.75" width="92.5" height="92.5" rx="23.25" stroke="#D9B75E" stroke-opacity=".55" stroke-width="1.5"/>
+  <path d="M48 16V21M22 40L48 22L74 40H22Z" stroke="#F2CC70" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M29 47V59M48 47V59M67 47V59" stroke="#E6F0F1" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M23 72H58C67 72 74 65 74 56M68 60L74 54L80 60" stroke="#45D0BA" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="72" r="5" fill="#F2CC70"/>
+  <circle cx="47" cy="72" r="4" fill="#0F2938" stroke="#45D0BA" stroke-width="3"/>
+</svg>

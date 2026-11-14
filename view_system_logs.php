@@ -8,7 +8,7 @@ require_once __DIR__ . '/includes/security.php';
 require_role([ROLE_HEAD_OPERATION, ROLE_SUPER_ADMIN]);
 
 $conn = get_db();
-$current_page = 'view_manage_team_logs.php';
+$current_page = 'view_system_logs.php';
 
 // 4. ดึงข้อมูล Logs
 $limit = 15;
