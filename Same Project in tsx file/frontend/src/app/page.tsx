@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDemo } from "@/context/DemoContext";
 import SystemBrand, { ComsLogo } from "@/components/branding/SystemBrand";
@@ -9,13 +9,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentUser, loginAsRole } = useDemo();
-  const [loggedOut, setLoggedOut] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get("logged_out") === "1") {
-      setLoggedOut(true);
-    }
-  }, [searchParams]);
+  const loggedOut = searchParams.get("logged_out") === "1";
 
   const handleRoleSelect = (roleId) => {
     loginAsRole(roleId);

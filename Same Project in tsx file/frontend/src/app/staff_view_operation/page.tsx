@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -11,25 +11,28 @@ export default function StaffViewOperationPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchDocs = async () => {
-    try {
+  const fetchDocs = useCallback(() => {
+    const load = async () => {
       const res = await fetch("http://localhost:4000/api/demo/documents", {
         headers: { "x-demo-role": currentRole }
       });
       const data = await res.json();
+      return { res, data };
+    };
+    return load().then(({ res, data }) => {
       if (data.success) {
         setDocuments(data.data);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchDocs();
-  }, [currentRole]);
+  }, [fetchDocs]);
 
   return (
     <div className="content-wrapper" style={{ backgroundColor: "var(--app-muted-bg)", minHeight: "100vh" }}>

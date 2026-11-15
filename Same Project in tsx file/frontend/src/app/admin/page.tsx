@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 import { api } from "@/services/api";
@@ -25,12 +25,19 @@ export default function AdminPage() {
     setOpenSections(prev => ({ ...prev, [key]: !prev [key] }));
   };
 
-  const fetchUsers = async () => {
-    const res = await api.getUsers(currentRole);
-    if (res.success) {
-      setUsers(res.data);
-    }
-  };
+  const fetchUsers = useCallback(() => {
+    const load = async () => {
+      const res = await api.getUsers(currentRole);
+      return { res };
+    };
+    return load().then(({ res }) => {
+      if (res.success) {
+        setUsers(res.data);
+      }
+    }).catch((err) => {
+      console.error(err);
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -38,7 +45,7 @@ export default function AdminPage() {
     const handleReset = () => fetchUsers();
     window.addEventListener("demo-data-reset", handleReset);
     return () => window.removeEventListener("demo-data-reset", handleReset);
-  }, [currentRole, isInitialized]);
+  }, [fetchUsers, isInitialized]);
 
   const handleRoleChange = async (userId, targetUser, newRole) => {
     if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสิทธิ์ของ "${targetUser.name}" เป็น "${getRoleThai(newRole)}"?`)) {

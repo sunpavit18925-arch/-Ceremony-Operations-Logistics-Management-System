@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useDemo } from "@/context/DemoContext";
@@ -21,8 +21,8 @@ function ManageVehicleContent() {
   const [alertMsg, setAlertMsg] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [docRes, vehRes, userRes] = await Promise.all([
         fetch(`http://localhost:4000/api/demo/documents/${jobId}`, { headers }),
@@ -33,7 +33,9 @@ function ManageVehicleContent() {
       const docData = await docRes.json();
       const vehData = await vehRes.json();
       const userData = await userRes.json();
-
+      return { docData, vehData, userData };
+    };
+    return load().then(({ docData, vehData, userData }) => {
       if (docData.success) {
         setDocument(docData.data);
         setAssignments(docData.vehicleAssignments || []);
@@ -42,16 +44,16 @@ function ManageVehicleContent() {
       if (userData.success) {
         setDrivers(userData.data.filter(u => u.role === "staff_vehicle" || u.role === "head_vehicle"));
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole, jobId]);
 
   useEffect(() => {
     fetchData();
-  }, [jobId, currentRole]);
+  }, [fetchData]);
 
   const handleAssignVehicle = async (e) => {
     e.preventDefault();

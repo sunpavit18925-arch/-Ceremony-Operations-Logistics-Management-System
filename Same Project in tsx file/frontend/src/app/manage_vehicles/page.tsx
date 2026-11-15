@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -30,8 +30,8 @@ export default function ManageVehiclesPage() {
   // Manage Types state
   const [newTypeName, setNewTypeName] = useState("");
 
-  const fetchData = async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [vehRes, typeRes] = await Promise.all([
         fetch("http://localhost:4000/api/demo/vehicles", { headers }),
@@ -40,24 +40,26 @@ export default function ManageVehiclesPage() {
 
       const vehData = await vehRes.json();
       const typeData = await typeRes.json();
-
+      return { vehData, typeData };
+    };
+    return load().then(({ vehData, typeData }) => {
       if (vehData.success) setVehicles(vehData.data);
       if (typeData.success) {
         setVehicleTypes(typeData.data);
-        if (typeData.data.length > 0 && !formType) {
-          setFormType(typeData.data[0]);
+        if (typeData.data.length > 0) {
+          setFormType(previous => previous || typeData.data[0]);
         }
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchData();
-  }, [currentRole]);
+  }, [fetchData]);
 
   const handleAddVehicle = async (e) => {
     e.preventDefault();

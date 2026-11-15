@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -33,8 +33,8 @@ export default function ManageOperation2Page() {
   const [equipQty, setEquipQty] = useState(1);
   const [alertMsg, setAlertMsg] = useState(null);
 
-  const fetchData = async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [docRes, userRes, teamRes, equipRes] = await Promise.all([
         fetch("http://localhost:4000/api/demo/documents", { headers }),
@@ -47,7 +47,9 @@ export default function ManageOperation2Page() {
       const userData = await userRes.json();
       const teamData = await teamRes.json();
       const equipData = await equipRes.json();
-
+      return { docData, userData, teamData, equipData };
+    };
+    return load().then(({ docData, userData, teamData, equipData }) => {
       if (docData.success) setDocuments(docData.data);
       if (userData.success) setUsers(userData.data);
       if (teamData.success) setTeamSets(teamData.data);
@@ -55,16 +57,16 @@ export default function ManageOperation2Page() {
         setEquipments(equipData.data);
         setBorrowings(equipData.borrowings || []);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchData();
-  }, [currentRole]);
+  }, [fetchData]);
 
   // Coordinators available
   const coordinatorList = users.filter(u => u.role === "coordinator_operation");

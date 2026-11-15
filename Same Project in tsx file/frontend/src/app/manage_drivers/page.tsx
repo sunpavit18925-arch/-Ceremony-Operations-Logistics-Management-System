@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -17,8 +17,8 @@ export default function ManageDriversPage() {
 
   const isHead = currentRole === "head_vehicle" || currentRole === "super_admin";
 
-  const fetchData = async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [userRes, typeRes, qualRes] = await Promise.all([
         fetch("http://localhost:4000/api/demo/users", { headers }),
@@ -29,22 +29,24 @@ export default function ManageDriversPage() {
       const userData = await userRes.json();
       const typeData = await typeRes.json();
       const qualData = await qualRes.json();
-
+      return { userData, typeData, qualData };
+    };
+    return load().then(({ userData, typeData, qualData }) => {
       if (userData.success) {
         setDrivers(userData.data.filter(u => u.role === "staff_vehicle" || u.role === "head_vehicle"));
       }
       if (typeData.success) setVehicleTypes(typeData.data);
       if (qualData.success) setDriverQuals(qualData.data);
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchData();
-  }, [currentRole]);
+  }, [fetchData]);
 
   const openModal = (driver) => {
     setActiveDriver(driver);

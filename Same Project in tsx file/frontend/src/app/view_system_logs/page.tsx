@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -10,25 +10,28 @@ export default function ViewSystemLogsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchLogs = async () => {
-    try {
+  const fetchLogs = useCallback(() => {
+    const load = async () => {
       const res = await fetch("http://localhost:4000/api/demo/logs", {
         headers: { "x-demo-role": currentRole }
       });
       const data = await res.json();
+      return { res, data };
+    };
+    return load().then(({ res, data }) => {
       if (data.success) {
         setLogs(data.data);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchLogs();
-  }, [currentRole]);
+  }, [fetchLogs]);
 
   const filteredLogs = logs.filter(l => {
     if (!searchQuery) return true;

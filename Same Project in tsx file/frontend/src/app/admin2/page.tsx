@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 import { api } from "@/services/api";
@@ -90,12 +90,19 @@ export default function Admin2Page() {
       });
   }, []);
 
-  const fetchDocs = async () => {
-    const res = await api.getDocuments({}, currentRole);
-    if (res.success) {
-      setDocs(res.data);
-    }
-  };
+  const fetchDocs = useCallback(() => {
+    const load = async () => {
+      const res = await api.getDocuments({}, currentRole);
+      return { res };
+    };
+    return load().then(({ res }) => {
+      if (res.success) {
+        setDocs(res.data);
+      }
+    }).catch((err) => {
+      console.error(err);
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -103,7 +110,7 @@ export default function Admin2Page() {
     const handleReset = () => fetchDocs();
     window.addEventListener("demo-data-reset", handleReset);
     return () => window.removeEventListener("demo-data-reset", handleReset);
-  }, [currentRole, isInitialized]);
+  }, [fetchDocs, isInitialized]);
 
   // Province dropdown helpers for Add Modal
   const addDistricts = useMemo(() => {
@@ -123,13 +130,13 @@ export default function Admin2Page() {
     if (!editingDoc || !editingDoc.venue_province || !thaiData.length) return [];
     const p = thaiData.find((item) => item.name_th === editingDoc.venue_province);
     return p && p.districts ? [...p.districts].sort((a, b) => a.name_th.localeCompare(b.name_th, "th")) : [];
-  }, [editingDoc?.venue_province, thaiData]);
+  }, [editingDoc, thaiData]);
 
   const editSubdistricts = useMemo(() => {
     if (!editingDoc || !editingDoc.venue_district || !editDistricts.length) return [];
     const d = editDistricts.find((item) => item.name_th === editingDoc.venue_district);
     return d && d.sub_districts ? [...d.sub_districts].sort((a, b) => a.name_th.localeCompare(b.name_th, "th")) : [];
-  }, [editingDoc?.venue_district, editDistricts]);
+  }, [editingDoc, editDistricts]);
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

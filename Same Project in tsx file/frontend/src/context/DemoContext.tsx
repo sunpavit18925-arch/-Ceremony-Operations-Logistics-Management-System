@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useSyncExternalStore, ReactNode } from "react";
 import { User, RoleType } from "../types/index";
 
 export interface DemoRoleItem {
@@ -153,55 +153,77 @@ export const DEMO_ROLES: DemoRoleItem[] = [
   { id: "pending", label: "รออนุมัติสิทธิ์การใช้งาน", thai: "รออนุมัติ" }
 ];
 
-export function DemoProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentRole, setCurrentRole] = useState<RoleType | "guest">("guest");
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [isResetting, setIsResetting] = useState<boolean>(false);
-  const [effectiveZone, setEffectiveZone] = useState<string>("admin");
+interface DemoSession {
+  currentUser: User | null;
+  currentRole: RoleType | "guest";
+  isInitialized: boolean;
+}
 
-  useEffect(() => {
+const serverSession: DemoSession = { currentUser: null, currentRole: "guest", isInitialized: false };
+let browserSession: DemoSession | undefined;
+const sessionEvent = "pabpla-demo-session";
+
+function getSession(): DemoSession {
+  if (!browserSession) {
+    let user = DEFAULT_USERS[0];
+    let role = user.role;
     try {
-      const savedUser = localStorage.getItem("pabpla_demo_user");
-      const savedRole = localStorage.getItem("pabpla_demo_role") as RoleType | null;
-
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser) as User;
-        setCurrentUser(parsed);
-        const resolvedRole = savedRole || parsed.role || "super_admin";
-        setCurrentRole(resolvedRole);
-        setEffectiveZone(
-          resolvedRole === "super_admin" || resolvedRole === "admin"
-            ? "admin"
-            : resolvedRole === "head_operation"
-            ? "head_operation"
-            : resolvedRole === "coordinator_operation"
-            ? "coordinator_operation"
-            : resolvedRole === "staff_operation"
-            ? "staff_operation"
-            : resolvedRole === "head_vehicle"
-            ? "head_vehicle"
-            : resolvedRole === "staff_vehicle"
-            ? "staff_vehicle"
-            : "admin"
-        );
-      } else {
-        // Default to super_admin if not chosen yet
-        setCurrentUser(DEFAULT_USERS[0]);
-        setCurrentRole("super_admin");
+      const saved = localStorage.getItem("pabpla_demo_user");
+      if (saved) {
+        user = JSON.parse(saved) as User;
+        role = (localStorage.getItem("pabpla_demo_role") as RoleType) || user.role;
       }
-    } catch (e) {
-      setCurrentUser(DEFAULT_USERS[0]);
-      setCurrentRole("super_admin");
-    } finally {
-      setIsInitialized(true);
+    } catch {
+      // Use the default demo account when browser storage is unavailable.
     }
-  }, []);
+    browserSession = { currentUser: user, currentRole: role, isInitialized: true };
+  }
+  return browserSession;
+}
+
+function subscribeSession(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === "pabpla_demo_user" || event.key === "pabpla_demo_role") {
+      browserSession = undefined;
+      onChange();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(sessionEvent, onChange);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(sessionEvent, onChange);
+  };
+}
+
+function updateSession(session: DemoSession) {
+  browserSession = session;
+  try {
+    if (session.currentUser) {
+      localStorage.setItem("pabpla_demo_user", JSON.stringify(session.currentUser));
+      localStorage.setItem("pabpla_demo_role", session.currentRole);
+    } else {
+      localStorage.removeItem("pabpla_demo_user");
+      localStorage.removeItem("pabpla_demo_role");
+    }
+  } catch {
+    // The current tab can still use the demo with browser storage blocked.
+  }
+  window.dispatchEvent(new Event(sessionEvent));
+}
+
+export function DemoProvider({ children }: { children: ReactNode }) {
+  const { currentUser, currentRole, isInitialized } = useSyncExternalStore(
+    subscribeSession, getSession, () => serverSession
+  );
+  const [isResetting, setIsResetting] = useState(false);
+  const defaultZone = ["super_admin", "admin", "guest", "pending"].includes(currentRole) ? "admin" : currentRole;
+  const [zoneOverride, setEffectiveZone] = useState<string | null>(null);
+  const effectiveZone = zoneOverride ?? defaultZone;
 
   const loginAsRole = (roleId: RoleType) => {
     const user = DEFAULT_USERS.find((u) => u.role === roleId) || DEFAULT_USERS[0];
-    setCurrentUser(user);
-    setCurrentRole(roleId);
+    updateSession({ currentUser: user, currentRole: roleId, isInitialized: true });
     setEffectiveZone(
       roleId === "super_admin" || roleId === "admin"
         ? "admin"
@@ -217,19 +239,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         ? "staff_vehicle"
         : "admin"
     );
-    try {
-      localStorage.setItem("pabpla_demo_user", JSON.stringify(user));
-      localStorage.setItem("pabpla_demo_role", roleId);
-    } catch (e) {}
   };
 
   const logout = () => {
-    setCurrentUser(null);
-    setCurrentRole("guest");
-    try {
-      localStorage.removeItem("pabpla_demo_user");
-      localStorage.removeItem("pabpla_demo_role");
-    } catch (e) {}
+    updateSession({ currentUser: null, currentRole: "guest", isInitialized: true });
+    setEffectiveZone(null);
   };
 
   const resetAllData = async () => {

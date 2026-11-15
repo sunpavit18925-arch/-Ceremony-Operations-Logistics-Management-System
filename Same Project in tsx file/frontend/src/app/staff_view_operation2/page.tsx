@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -23,8 +23,8 @@ export default function StaffViewOperation2Page() {
   const [meetingLocation, setMeetingLocation] = useState("");
   const [meetingChairman, setMeetingChairman] = useState("");
 
-  const fetchData = async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [docRes, equipRes] = await Promise.all([
         fetch("http://localhost:4000/api/demo/documents", { headers }),
@@ -33,22 +33,24 @@ export default function StaffViewOperation2Page() {
 
       const docData = await docRes.json();
       const equipData = await equipRes.json();
-
+      return { docData, equipData };
+    };
+    return load().then(({ docData, equipData }) => {
       if (docData.success) setDocuments(docData.data);
       if (equipData.success) {
         setEquipments(equipData.data);
         setBorrowings(equipData.borrowings || []);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchData();
-  }, [currentRole]);
+  }, [fetchData]);
 
   const handleAcknowledge = async (docId) => {
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -16,8 +16,8 @@ export default function ManageTeamPage() {
   const [selectedStaffName, setSelectedStaffName] = useState("");
   const [alertMsg, setAlertMsg] = useState(null);
 
-  const fetchTeamsAndStaff = async () => {
-    try {
+  const fetchTeamsAndStaff = useCallback(() => {
+    const load = async () => {
       const headers = { "x-demo-role": currentRole };
       const [teamRes, userRes] = await Promise.all([
         fetch("http://localhost:4000/api/demo/teams", { headers }),
@@ -26,19 +26,21 @@ export default function ManageTeamPage() {
 
       const teamData = await teamRes.json();
       const userData = await userRes.json();
-
+      return { teamData, userData };
+    };
+    return load().then(({ teamData, userData }) => {
       if (teamData.success) setTeams(teamData.data);
       if (userData.success) {
         setStaffUsers(userData.data.filter(u => u.role === "staff_operation"));
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchTeamsAndStaff();
-  }, [currentRole]);
+  }, [fetchTeamsAndStaff]);
 
   const handleCreateSet = async (e) => {
     e.preventDefault();

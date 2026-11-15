@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -15,40 +15,46 @@ export default function ManageCoordinatorOperationPage() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = async () => {
-    try {
+  const fetchUsers = useCallback(() => {
+    const load = async () => {
       const res = await fetch("http://localhost:4000/api/demo/users", {
         headers: { "x-demo-role": currentRole }
       });
       const data = await res.json();
+      return { res, data };
+    };
+    return load().then(({ res, data }) => {
       if (data.success) {
         setUsers(data.data);
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    }
-  };
+    });
+  }, [currentRole]);
 
-  const fetchLogs = async () => {
-    try {
+  const fetchLogs = useCallback(() => {
+    const load = async () => {
       const res = await fetch("http://localhost:4000/api/demo/logs", {
         headers: { "x-demo-role": currentRole }
       });
       const data = await res.json();
+      return { res, data };
+    };
+    return load().then(({ res, data }) => {
       if (data.success) {
         setLogs(data.data.filter(l => l.action === "ASSIGN_COORD" || l.action === "REVOKE_COORD" || l.action === "ASSIGN_COORDINATOR"));
       }
-    } catch (err) {
+    }).catch((err) => {
       console.error(err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, [currentRole]);
 
   useEffect(() => {
     fetchUsers();
     fetchLogs();
-  }, [currentRole]);
+  }, [fetchUsers, fetchLogs]);
 
   // Candidates for coordinator: staff_operation
   const candidateStaff = users.filter(u => u.role === "staff_operation");
