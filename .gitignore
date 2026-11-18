@@ -80,8 +80,8 @@ Desktop.ini
 
 # Downloaded comparison project and old local TypeScript copies
 /pabpla_test3/
-/Same Project in tsx file/backend tsx/
-/Same Project in tsx file/frontend tsx/
+/same-project-typescript-react-express-nodejs-api/backend tsx/
+/same-project-typescript-react-express-nodejs-api/frontend tsx/
 
 # Local screenshots and unused large legacy artwork
 /img/

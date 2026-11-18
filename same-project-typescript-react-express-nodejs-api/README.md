@@ -90,9 +90,9 @@ flowchart TD
 
 ### คำสั่งเริ่มต้น (One-Command Setup)
 
-1. เข้าสู่โฟลเดอร์โปรเจกต์ `Same Project in tsx file`:
+1. เข้าสู่โฟลเดอร์โปรเจกต์ `same-project-typescript-react-express-nodejs-api`:
    ```bash
-   cd "Same Project in tsx file"
+   cd same-project-typescript-react-express-nodejs-api
    ```
 
 2. ติดตั้ง Dependencies ทั้ง Frontend และ Backend:
@@ -116,7 +116,7 @@ flowchart TD
 รันชุดทดสอบ Backend API & State Transitions ด้วย Node.js Test Runner:
 
 ```bash
-cd "Same Project in tsx file/backend"
+cd same-project-typescript-react-express-nodejs-api/backend
 npm test
 ```
 
