@@ -1,0 +1,10 @@
+# All application PHP files are PHP, not Hack.
+*.php linguist-language=PHP
+
+# Third-party Thai province data and its import/export scripts.
+# Keep these files available to the app, but exclude them from language stats.
+thai-province-data-master/** linguist-vendored
+same-project-typescript-react-express-nodejs-api/frontend/public/thai-province-data-master/** linguist-vendored
+
+# npm generates these dependency lock files.
+package-lock.json linguist-generated
