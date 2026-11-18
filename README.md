@@ -37,7 +37,7 @@
 ```text
 pabpla/
 ├── config.php                  # Legacy compatibility wrapper
-├── db.php                      # PDO Connection wrapper สำหรับรองรับโค้ดเดิม
+├── backup/unused-php/           # ไฟล์ PHP เดิมที่ไม่ได้เรียกใช้ พร้อม manifest.json สำหรับตรวจสอบและกู้คืน
 ├── download.php                # ตัวควบคุมการดาวน์โหลดไฟล์แนบอย่างปลอดภัย (Auth & Permission Checked)
 ├── index.php                   # จุดเข้าสู่ระบบหลัก (SSO Landing & Demo Entry)
 ├── login_demo.php              # ระบบเข้าสู่ระบบสำหรับทดสอบ (Demo Switcher / Password Login)
@@ -189,7 +189,7 @@ http://localhost/pabpla/
 
 | ชื่อผู้ใช้งาน (Username) | รหัสผ่าน | ชื่อ - นามสกุล | บทบาท (Role) | หน้าแรกหลังเข้าสู่ระบบ |
 | :--- | :--- | :--- | :--- | :--- |
-| `superadmin_demo` | `password123` | สมศักดิ์ มหาดไทย | `super_admin` | `home.php` |
+| `superadmin_demo` | `password123` | สมศักดิ์ มหาดไทย | `super_admin` | `home_admin.php` |
 | `admin_demo` | `password123` | วิชัย สารบรรณ | `admin` | `home_admin.php` |
 | `head_op_demo` | `password123` | กิตติศักดิ์ พลับพลา | `head_operation` | `home_head_operation.php` |
 | `coord_op_demo` | `password123` | นครินทร์ ประสานกิจ | `coordinator_operation` | `staff_view_operation2.php` |

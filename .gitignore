@@ -1,30 +1,63 @@
 # Environment configuration
 .env
-.env.backup
-.env.*.local
+.env.*
+!.env.example
+
+# Private keys and local credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+.aws/
+.codex/
 
 # Real database dumps containing sensitive agency records
-pabpla (27).sql
+*.sql
 *.sql.gz
 *.sql.bak
+*.dump
+*.sqlite
+*.sqlite3
+*.db
 *.bak
 
-# Exception: allow clean repository schema and synthetic seeds
-!database/*.sql
+# Allow the application schema, synthetic demo seeds, and public province data
+!/database/schema.sql
+!/database/seeds.sql
+!**/thai-province-data-master/formats/sql/*.sql
 
 # Uploaded documents (retain directory protection and gitkeeps)
-uploads/documents/*
-!uploads/documents/.htaccess
-!uploads/documents/.gitkeep
+/uploads/**
+!/uploads/**/
+!/uploads/**/.htaccess
+!/uploads/**/.gitkeep
 
-uploads/meetings/*
-!uploads/meetings/.htaccess
-!uploads/meetings/.gitkeep
+# Temporary test uploads
+/tests/test_uploads/*
+!/tests/test_uploads/.htaccess
+!/tests/test_uploads/.gitkeep
+
+# Dependencies and generated build/test output
+node_modules/
+.next/
+dist/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+playwright-report/
+test-results/
 
 # Error logs and temp files
 *.log
 error_log
 php_errors.log
+*.tmp
+*.temp
+*.swp
+*~
 
 # Operating System & IDE artifacts
 .DS_Store
@@ -38,3 +71,21 @@ Desktop.ini
 
 # Local archive of unused files
 /backup/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+
+# Downloaded comparison project and old local TypeScript copies
+/pabpla_test3/
+/Same Project in tsx file/backend tsx/
+/Same Project in tsx file/frontend tsx/
+
+# Local screenshots and unused large legacy artwork
+/img/
+/images/happy.png
+
+# Machine-specific comparison and archive reports
+/tools/*-report.json
