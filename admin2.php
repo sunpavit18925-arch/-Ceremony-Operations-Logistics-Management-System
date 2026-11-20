@@ -9,6 +9,7 @@ require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/storage.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/queries.php';
 require_once __DIR__ . '/controllers/admin_document_controller.php';
 
 require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]);
@@ -33,11 +34,12 @@ $stmt_docs->execute();
 $docs = $stmt_docs->fetchAll();
 
 // Fetch assigned coordinators
-$all_assigned_coords = $conn->query("
+$all_assigned_coords = fetch_for_document_ids($conn, "
     SELECT da.doc_id, da.user_id, da.is_acknowledged, u.fname, u.lname 
     FROM document_assignments da
     JOIN users u ON da.user_id = u.id
-")->fetchAll();
+    WHERE da.doc_id IN ({document_ids})
+", $docs);
 
 $coords_by_doc = [];
 foreach ($all_assigned_coords as $c) {
@@ -233,6 +235,7 @@ function getBadgeClass($type) {
         .pagination .page-link { color: #2a5298; border-radius: 0.5rem !important; margin: 0 3px; border: 1px solid #e2e8f0; }
         .pagination .page-item.active .page-link { background-color: #2a5298; border-color: #2a5298; color: white; }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

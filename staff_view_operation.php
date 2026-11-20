@@ -78,6 +78,7 @@ try {
 
 <head>
     <meta charset='UTF-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายการงานมอบหมาย</title>
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css' rel='stylesheet'>
     <link href='https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap' rel='stylesheet'>
@@ -117,6 +118,7 @@ try {
     .pagination .page-item.active .page-link { background-color: #0ea5e9; color: white; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
     .pagination .page-link:hover:not(.active) { background-color: #e0f2fe; color: #0284c7; }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 
 <body>

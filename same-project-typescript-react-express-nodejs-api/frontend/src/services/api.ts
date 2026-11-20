@@ -29,6 +29,7 @@ export async function apiRequest<T = any>(
     const data = await res.json();
     return data;
   } catch (err: any) {
+    if (err?.name === "AbortError") return { success: false, error: "Request cancelled" };
     console.error("API Request Error:", err);
     return {
       success: false,

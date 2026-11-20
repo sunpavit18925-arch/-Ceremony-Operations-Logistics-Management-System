@@ -30,6 +30,8 @@ import {
 
 // In-Memory Data Store with Deep-Clone Snapshot Reset
 export class MockDataStore {
+  public static readonly MAX_LOGS = 10_000;
+  private sequences: Record<string, number> = {};
   public roles!: Role[];
   public permissions!: Record<RoleType, string[]>;
   public users!: User[];
@@ -63,18 +65,31 @@ export class MockDataStore {
     this.teamSets = JSON.parse(JSON.stringify(initialTeamSets));
     this.vehicleTypes = JSON.parse(JSON.stringify(initialVehicleTypes));
     this.driverQualifications = JSON.parse(JSON.stringify(initialDriverQualifications));
+    this.sequences = {};
+    for (const [name, records] of Object.entries({
+      documents: this.documents, vehicles: this.vehicles,
+      vehicleAssignments: this.vehicleAssignments, borrowings: this.borrowings,
+      meetingReports: this.meetingReports, logs: this.logs
+    })) {
+      this.sequences[name] = records.reduce((max, record) => Math.max(max, record.id), 0);
+    }
     this.lastReset = new Date().toISOString();
+  }
+
+  public nextId(collection: string): number {
+    return this.sequences[collection] = (this.sequences[collection] ?? 0) + 1;
   }
 
   public addLog(action: string, detail: string, user: string = "System Demo"): SystemLog {
     const newLog: SystemLog = {
-      id: this.logs.length + 1,
+      id: this.nextId("logs"),
       action,
       detail,
       user,
       timestamp: new Date().toISOString()
     };
     this.logs.unshift(newLog);
+    if (this.logs.length > MockDataStore.MAX_LOGS) this.logs.length = MockDataStore.MAX_LOGS;
     return newLog;
   }
 }

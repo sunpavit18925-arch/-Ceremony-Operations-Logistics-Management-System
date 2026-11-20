@@ -1,13 +1,18 @@
 ﻿"use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useDemo } from "@/context/DemoContext";
 import { api } from "@/services/api";
+import { usePagedResource } from "@/hooks/usePagedResource";
+import Pagination from "@/components/Pagination";
+import type { Document } from "@/types";
 
 export default function DocumentsPage() {
-  const { currentRole, showNotice } = useDemo();
-  const [documents, setDocuments] = useState([]);
+  const { currentRole, showNotice, isInitialized } = useDemo();
   const [search, setSearch] = useState("");
+  const { data: filteredDocs, refresh: fetchDocs, pagination, setPage, loading, error } = usePagedResource<Document>(
+    "/documents", currentRole, search, isInitialized
+  );
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -31,18 +36,6 @@ export default function DocumentsPage() {
     coordinatorName: "ณัฐพงษ์ ประสานมิตร",
     coordinatorPhone: "081-444-5555",
   });
-
-  const fetchDocs = useCallback(() =>
-    api.getDocuments({}, currentRole).then((res) => {
-      if (res.success) setDocuments(res.data);
-    }), [currentRole]);
-
-  useEffect(() => {
-    fetchDocs();
-    const handleReset = () => fetchDocs();
-    window.addEventListener("demo-data-reset", handleReset);
-    return () => window.removeEventListener("demo-data-reset", handleReset);
-  }, [fetchDocs]);
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -90,15 +83,6 @@ export default function DocumentsPage() {
     }
   };
 
-  const filteredDocs = documents.filter((d) => {
-    const q = search.toLowerCase();
-    return (
-      d.docNumber.toLowerCase().includes(q) ||
-      d.docName.toLowerCase().includes(q) ||
-      d.hostAgency.toLowerCase().includes(q)
-    );
-  });
-
   const isHeadOp = currentRole === "head_operation" || currentRole === "super_admin";
   const isCoord = currentRole === "coordinator_operation" || currentRole === "super_admin";
 
@@ -129,7 +113,7 @@ export default function DocumentsPage() {
                 <i className="bi bi-plus-circle me-1"></i> ลงทะเบียนรับหนังสือใหม่
               </button>
             )}
-            <span className="text-muted small">ทั้งหมด {filteredDocs.length} รายการ</span>
+            <span className="text-muted small">ทั้งหมด {pagination.total} รายการ</span>
           </div>
           <div>
             <input
@@ -230,7 +214,9 @@ export default function DocumentsPage() {
                 ))}
               </tbody>
             </table>
+            {error && <div className="alert alert-danger m-3" role="alert">{error}</div>}
           </div>
+          <Pagination info={pagination} onPageChange={setPage} loading={loading} />
         </div>
       </div>
 

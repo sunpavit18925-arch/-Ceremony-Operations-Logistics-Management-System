@@ -2,6 +2,25 @@ import { Response } from "express";
 import { store } from "../store/dataStore.js";
 import { DemoRequest, Document, Vehicle, VehicleAssignment } from "../types/index.js";
 
+function paginate<T>(items: T[], query: DemoRequest["query"], defaultLimit?: number) {
+  // Keep existing document consumers compatible; page/limit opt into bounded responses.
+  if (defaultLimit === undefined && query.page === undefined && query.limit === undefined) {
+    return { data: items, count: items.length };
+  }
+  const positiveInt = (value: unknown, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+  };
+  const limit = Math.min(positiveInt(query.limit, defaultLimit ?? 25), 100);
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const page = Math.min(positiveInt(query.page, 1), totalPages);
+  return {
+    data: items.slice((page - 1) * limit, page * limit), count: total,
+    pagination: { page, limit, total, totalPages }
+  };
+}
+
 export const getRoles = (req: DemoRequest, res: Response): void => {
   res.json({
     success: true,
@@ -56,16 +75,23 @@ export const getDashboardStats = (req: DemoRequest, res: Response): void => {
   const vehicles = store.vehicles;
   const equipments = store.equipments;
 
+  const counts: Record<Document["status"], number> = { pending: 0, assigned: 0, in_progress: 0, completed: 0, rejected: 0 };
+  for (const doc of docs) counts[doc.status]++;
+  const equipmentCounts = equipments.reduce((acc, item) => {
+    acc.total += item.totalQty;
+    acc.available += item.availableQty;
+    return acc;
+  }, { total: 0, available: 0 });
   const stats = {
     totalDocs: docs.length,
-    pendingDocs: docs.filter(d => d.status === "pending").length,
-    assignedDocs: docs.filter(d => d.status === "assigned").length,
-    inProgressDocs: docs.filter(d => d.status === "in_progress").length,
-    completedDocs: docs.filter(d => d.status === "completed").length,
+    pendingDocs: counts.pending,
+    assignedDocs: counts.assigned,
+    inProgressDocs: counts.in_progress,
+    completedDocs: counts.completed,
     totalVehicles: vehicles.length,
     activeVehicles: vehicles.filter(v => v.status === "active").length,
-    totalEquipments: equipments.reduce((acc, curr) => acc + curr.totalQty, 0),
-    availableEquipments: equipments.reduce((acc, curr) => acc + curr.availableQty, 0),
+    totalEquipments: equipmentCounts.total,
+    availableEquipments: equipmentCounts.available,
     activeBorrowings: store.borrowings.filter(b => b.status === "borrowed").length,
     recentLogs: store.logs.slice(0, 5),
     roleView: role
@@ -80,30 +106,18 @@ export const getDashboardStats = (req: DemoRequest, res: Response): void => {
 export const getDocuments = (req: DemoRequest, res: Response): void => {
   const { status, search } = req.query as { status?: string; search?: string };
   const role = req.demoRole;
-  let docs = [...store.documents];
-
-  // Role filtering simulation
-  if (role === "coordinator_operation" || role === "staff_operation") {
-    docs = docs.filter(d => d.assignedToId === req.currentUser?.id || d.status === "assigned" || d.status === "in_progress");
-  }
-
-  if (status && status !== "all") {
-    docs = docs.filter(d => d.status === status);
-  }
-
-  if (search) {
-    const s = search.toLowerCase();
-    docs = docs.filter(d => 
-      d.docNumber.toLowerCase().includes(s) || 
-      d.docName.toLowerCase().includes(s) || 
-      d.venueProvince.toLowerCase().includes(s)
-    );
-  }
+  const s = typeof search === "string" ? search.trim().toLowerCase() : "";
+  const scoped = role === "coordinator_operation" || role === "staff_operation";
+  const docs = store.documents.filter(d => {
+    if (scoped && d.assignedToId !== req.currentUser?.id && d.status !== "assigned" && d.status !== "in_progress") return false;
+    if (status && status !== "all" && d.status !== status) return false;
+    return !s || [d.docNumber, d.divisionReceiveNumber, d.sourceDocNumber, d.docName,
+      d.venueName, d.venueProvince, d.hostAgency].some(value => value?.toLowerCase().includes(s));
+  });
 
   res.json({
     success: true,
-    count: docs.length,
-    data: docs
+    ...paginate(docs, req.query)
   });
 };
 
@@ -137,7 +151,7 @@ export const createDocument = (req: DemoRequest, res: Response): void => {
   }
 
   const currentYear = new Date().getFullYear() + 543;
-  const newId = store.documents.length + 1;
+  const newId = store.nextId("documents");
   const docNumber = body.divisionReceiveNumber || body.docNumber || `มท 0701/${100 + newId}`;
 
   const newDoc: Document = {
@@ -324,7 +338,7 @@ export const submitMeetingReport = (req: DemoRequest, res: Response): void => {
   const { topic, summary, meetingDate, location, chairmanName } = req.body;
 
   const report = {
-    id: store.meetingReports.length + 1,
+    id: store.nextId("meetingReports"),
     docId: doc.id,
     meetingDate: meetingDate || new Date().toISOString().split("T")[0],
     meetingTime: "10:00 น.",
@@ -385,7 +399,7 @@ export const assignVehicle = (req: DemoRequest, res: Response): void => {
   }
 
   const assignment: VehicleAssignment = {
-    id: store.vehicleAssignments.length + 1,
+    id: store.nextId("vehicleAssignments"),
     docId: doc.id,
     docNumber: doc.docNumber,
     docName: doc.docName,
@@ -441,7 +455,7 @@ export const borrowEquipment = (req: DemoRequest, res: Response): void => {
   equipment.availableQty -= quantity;
 
   const borrowing = {
-    id: store.borrowings.length + 1,
+    id: store.nextId("borrowings"),
     docId: doc.id,
     equipmentCode: equipment.code,
     equipmentName: equipment.name,
@@ -641,7 +655,7 @@ export const createVehicle = (req: DemoRequest, res: Response): void => {
   const licensePlate = `${plateLetters} ${plateNumbers} ${plateProvince}`;
   
   const newVehicle: Vehicle = {
-    id: store.vehicles.length + 1,
+    id: store.nextId("vehicles"),
     vehicleType,
     brand,
     plateLetters,
@@ -774,9 +788,15 @@ export const revokeCoordinatorRole = (req: DemoRequest, res: Response): void => 
 };
 
 export const getSystemLogs = (req: DemoRequest, res: Response): void => {
+  const search = typeof req.query.search === "string" ? req.query.search.trim().toLowerCase() : "";
+  const actions = typeof req.query.actions === "string" ? new Set(req.query.actions.split(",")) : null;
+  const logs = search || actions ? store.logs.filter(log =>
+    (!actions || actions.has(log.action)) &&
+    (!search || [log.action, log.detail, log.user].some(value => value.toLowerCase().includes(search)))
+  ) : store.logs;
   res.json({
     success: true,
-    data: store.logs
+    ...paginate(logs, req.query, 50)
   });
 };
 

@@ -65,7 +65,9 @@ CREATE TABLE IF NOT EXISTS `documents` (
   `is_acknowledged` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_documents_sent_to` (`sent_to`),
-  KEY `idx_documents_doc_status` (`doc_status`)
+  KEY `idx_documents_doc_status` (`doc_status`),
+  KEY `idx_documents_received` (`received_date`, `id`),
+  KEY `idx_documents_recipient_received` (`sent_to`, `received_date`, `id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `document_assignments` (
@@ -76,7 +78,8 @@ CREATE TABLE IF NOT EXISTS `document_assignments` (
   `is_acknowledged` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_doc_assign_doc` (`doc_id`),
-  KEY `idx_doc_assign_user` (`user_id`)
+  KEY `idx_doc_assign_user` (`user_id`),
+  KEY `idx_doc_assign_user_doc_ack` (`user_id`, `doc_id`, `is_acknowledged`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `jobs` (
@@ -149,7 +152,10 @@ CREATE TABLE IF NOT EXISTS `system_logs` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_logs_job` (`job_id`),
-  KEY `idx_logs_action` (`action_type`)
+  KEY `idx_logs_action` (`action_type`),
+  KEY `idx_logs_created_id` (`created_at`, `id`),
+  KEY `idx_logs_action_created_id` (`action_type`, `created_at`, `id`),
+  KEY `idx_logs_job_action_id` (`job_id`, `action_type`, `id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `vehicles` (
@@ -181,7 +187,8 @@ CREATE TABLE IF NOT EXISTS `vehicle_assignments` (
   `assistant_2` varchar(100) DEFAULT NULL,
   `assigned_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_vassign_job` (`job_id`)
+  KEY `idx_vassign_job` (`job_id`),
+  KEY `idx_vassign_driver_job` (`driver_name`, `job_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `driver_qualifications` (

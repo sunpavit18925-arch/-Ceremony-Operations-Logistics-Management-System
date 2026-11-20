@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/queries.php';
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/equipment.php';
 require_once __DIR__ . '/includes/storage.php';
@@ -206,7 +207,7 @@ try {
             }
         }
 
-        $res = equipment_return($conn, $borrow_id);
+        $res = equipment_return($conn, $borrow_id, 0, (int)$_SESSION['user_id'], $_SESSION['role'] ?? '', $_SESSION['username'] ?? 'system');
         if ($res['success']) {
             header("Location: staff_view_operation2.php?page={$page}&return_success=1&open_modal={$job_id}");
         } else {
@@ -252,13 +253,11 @@ try {
     // คำนวณจำนวนสรุปสถานะสำหรับส่วน Filter
     $count_total = $total_items;
     
-    $stmt_all_stats = $conn->prepare("SELECT da.is_acknowledged FROM documents d JOIN document_assignments da ON d.id = da.doc_id WHERE da.user_id = :my_id" . (empty($search) ? "" : " AND (d.doc_name LIKE :search1 OR d.doc_number LIKE :search2 OR d.description LIKE :search3)"));
+    $stmt_all_stats = $conn->prepare("SELECT COALESCE(SUM(da.is_acknowledged = 1), 0) AS acknowledged, COALESCE(SUM(da.is_acknowledged = 0), 0) AS pending FROM documents d JOIN document_assignments da ON d.id = da.doc_id WHERE da.user_id = :my_id" . (empty($search) ? "" : " AND (d.doc_name LIKE :search1 OR d.doc_number LIKE :search2 OR d.description LIKE :search3)"));
     $stmt_all_stats->execute($params);
-    $all_stats = $stmt_all_stats->fetchAll(PDO::FETCH_COLUMN);
-    foreach ($all_stats as $status) {
-        if ($status == 1) $count_acknowledged++;
-        else $count_pending++;
-    }
+    $all_stats = $stmt_all_stats->fetch(PDO::FETCH_ASSOC);
+    $count_acknowledged = (int)$all_stats['acknowledged'];
+    $count_pending = (int)$all_stats['pending'];
 
     $sql_docs .= " ORDER BY d.received_date DESC LIMIT :limit OFFSET :offset";
 
@@ -276,14 +275,15 @@ try {
     $equipments_list = $stmt_equipments->fetchAll(PDO::FETCH_ASSOC);
 
     // --- ดึงข้อมูลการยืมที่มีอยู่แล้วทั้งหมด ---
-    $stmt_borrowings = $conn->query("
+    $page_borrowings = fetch_for_document_ids($conn, "
         SELECT eb.*, e.equipment_name, e.unit 
         FROM equipment_borrowings eb
         JOIN equipments e ON eb.equipment_code = e.equipment_code
+        WHERE eb.job_id IN ({document_ids})
         ORDER BY eb.created_at DESC
-    ");
+    ", $my_docs);
     $borrowings_by_job = [];
-    foreach ($stmt_borrowings->fetchAll(PDO::FETCH_ASSOC) as $b) {
+    foreach ($page_borrowings as $b) {
         $borrowings_by_job[$b['job_id']][] = $b;
     }
 
@@ -382,6 +382,7 @@ try {
             .user-profile-sm { justify-content: flex-start; text-align: left; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 
 <body>

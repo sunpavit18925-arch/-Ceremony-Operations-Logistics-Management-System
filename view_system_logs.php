@@ -26,7 +26,7 @@ try {
         SELECT sl.*, d.doc_name, d.doc_number 
         FROM system_logs sl
         LEFT JOIN documents d ON sl.job_id = d.id
-        ORDER BY sl.created_at DESC
+        ORDER BY sl.created_at DESC, sl.id DESC
         LIMIT :limit OFFSET :offset
     ");
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -72,6 +72,7 @@ try {
         .pagination .page-item.active .page-link { background-color: #2a5298; border-color: #2a5298; color: white; }
         .pagination .page-link:hover:not(.active) { background-color: #f1f4f8; }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
@@ -99,7 +100,7 @@ try {
                 </div>
                 <div class="position-relative">
                     <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchLog" class="form-control bg-light border-0 shadow-sm ps-5 py-2" style="border-radius: 20px; min-width: 280px;" placeholder="ค้นหารหัสงาน, รายละเอียด...">
+                    <input type="text" id="searchLog" class="form-control bg-light border-0 shadow-sm ps-5 py-2" style="border-radius: 20px; width: 100%;" placeholder="ค้นหารหัสงาน, รายละเอียด...">
                 </div>
             </div>
             

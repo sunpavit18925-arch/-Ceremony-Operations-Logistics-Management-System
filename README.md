@@ -205,13 +205,24 @@ http://localhost/pabpla/
 
 ## 6. การทดสอบอัตโนมัติ (Automated Testing)
 
-ระบบมาพร้อมชุดทดสอบอัตโนมัติที่ครอบคลุม 10 หมวดหมู่ความปลอดภัยและการทำงานทางธุรกิจ 28 รายการทดสอบ
+ระบบมาพร้อมชุดทดสอบอัตโนมัติ 32 รายการ ครอบคลุม 12 หมวดหมู่ความปลอดภัยและการทำงานทางธุรกิจ
 
 ### วิธีรันชุดทดสอบ
 เปิด Terminal ในโฟลเดอร์ของโปรเจกต์ แล้วรันคำสั่ง:
 ```bash
 php tests/run_tests.php
+php tests/performance_tests.php
 ```
+
+`run_tests.php` ล้างและสร้างข้อมูลจำลองในฐานข้อมูล `pabpla_test` ใหม่ ส่วน `performance_tests.php` ตรวจการ query เฉพาะหน้าปัจจุบัน ผลลัพธ์การตรวจงานซ้อน และแผน `EXPLAIN` บน MariaDB/MySQL โดย rollback ข้อมูลที่ใช้ทดสอบ ค่า host/port และบัญชีเชื่อมต่อใช้จาก `.env` หรือ environment variables
+
+สำหรับฐานข้อมูลที่ติดตั้งแล้ว เพิ่ม index โดยเก็บข้อมูลเดิมด้วยคำสั่งต่อไปนี้ ซึ่งรันซ้ำได้:
+
+```bash
+php database/migrate_performance.php
+```
+
+การติดตั้งใหม่จาก `database/schema.sql` มี index ชุดเดียวกันแล้ว
 
 ### สรุปผลการทดสอบที่ครอบคลุม:
 1. **Unauthenticated Protection**: ผู้ใช้ที่ไม่มี Session จะถูกปฏิเสธและ Redirect ทันที

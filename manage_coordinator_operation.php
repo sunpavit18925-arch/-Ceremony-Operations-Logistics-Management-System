@@ -271,6 +271,7 @@ try {
             border-color: #2c5364;
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

@@ -120,17 +120,13 @@ cd same-project-typescript-react-express-nodejs-api/backend
 npm test
 ```
 
-ผลการทดสอบ:
-```text
-✔ Backend API Health Check (54.55ms)
-✔ GET /api/demo/roles returns all 8 roles (7.97ms)
-✔ GET /api/demo/documents returns seeded list (9.66ms)
-✔ POST /api/demo/documents creates new document (16.40ms)
-✔ Full Workflow Step: Assign coordinator -> Acknowledge -> Assign Vehicle (13.94ms)
-✔ Reset Demo Data restores original mock snapshot (6.84ms)
+คำสั่งนี้คอมไพล์ TypeScript ก่อนรัน Node.js Test Runner ชุดทดสอบ 12 ข้อครอบคลุม health check, ข้อมูลเริ่มต้น, การสร้างเอกสาร, reset, pagination, การค้นหาก่อนแบ่งหน้า, สิทธิ์ของบทบาท, ID หลังลบแล้วสร้างใหม่ และขอบเขตการเก็บ logs
 
-ℹ tests 6 | suites 0 | pass 6 | fail 0
-```
+หน้า `/admin2`, `/documents` และ `/view_system_logs` ค้นหาและแบ่งหน้าผ่าน API โดยรอให้หยุดพิมพ์ 250 ms และยกเลิกคำขอเดิมเมื่อเปลี่ยนหน้า/ตัวกรอง
+
+- `GET /api/demo/documents?page=1&limit=25&search=...` คืน `data`, `count` และ `pagination` โดยจำกัด `limit` สูงสุด 100 รายการ คำขอเอกสารที่ไม่ส่ง `page`/`limit` ยังรองรับผู้เรียกเดิมที่ใช้รายการทั้งหมด
+- `GET /api/demo/logs?page=1&limit=25&search=...&actions=ASSIGN_COORD,REVOKE_COORD` กรองก่อนแบ่งหน้า ค่าเริ่มต้นคือ 50 รายการ และสูงสุด 100 รายการต่อหน้า
+- Demo store เก็บ logs ล่าสุดไม่เกิน 10,000 รายการ โดย ID เพิ่มต่อเนื่องแม้ตัดรายการเก่าออก และเริ่มใหม่เมื่อ reset ข้อมูลเดโม
 
 ---
 

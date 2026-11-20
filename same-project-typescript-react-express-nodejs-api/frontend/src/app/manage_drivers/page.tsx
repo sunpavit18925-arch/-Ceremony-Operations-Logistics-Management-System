@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 
@@ -16,6 +16,7 @@ export default function ManageDriversPage() {
   const [loading, setLoading] = useState(true);
 
   const isHead = currentRole === "head_vehicle" || currentRole === "super_admin";
+  const qualificationsByDriver = useMemo(() => new Map(driverQuals.map(q => [q.userId, q])), [driverQuals]);
 
   const fetchData = useCallback(() => {
     const load = async () => {
@@ -50,7 +51,7 @@ export default function ManageDriversPage() {
 
   const openModal = (driver) => {
     setActiveDriver(driver);
-    const qual = driverQuals.find(q => q.userId === driver.id);
+    const qual = qualificationsByDriver.get(driver.id);
     setSelectedVehicles(qual ? qual.allowedVehicles : []);
     setShowModal(true);
   };
@@ -145,7 +146,7 @@ export default function ManageDriversPage() {
                     </tr>
                   ) : (
                     drivers.map((driver, index) => {
-                      const qual = driverQuals.find(q => q.userId === driver.id);
+                      const qual = qualificationsByDriver.get(driver.id);
                       const allowed = qual ? qual.allowedVehicles : [];
                       return (
                         <tr key={driver.id}>

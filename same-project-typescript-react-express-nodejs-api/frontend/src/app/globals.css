@@ -94,54 +94,6 @@ body {
 }
 
 /* เมนู Role Admin จัดให้อยู่ตรงกลางของ Navbar (ตรงตาม PHP menu.php) */
-@media (min-width: 992px) {
-  .custom-navbar .container-fluid {
-    position: relative;
-  }
-  .custom-navbar .navbar-nav-admin {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    margin: 0 !important;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    z-index: 1025;
-    list-style: none;
-    padding-left: 0;
-  }
-  .custom-navbar .navbar-nav-admin .nav-link {
-    white-space: nowrap;
-    padding-left: 1.25rem !important;
-    padding-right: 1.25rem !important;
-  }
-}
-@media (min-width: 992px) and (max-width: 1199.98px) {
-  .custom-navbar .navbar-nav-admin .nav-link {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-}
-@media (max-width: 991.98px) {
-  .custom-navbar .navbar-nav-admin {
-    width: 100%;
-    text-align: center;
-    margin: 0.5rem 0 1rem 0 !important;
-    padding-left: 0;
-    list-style: none;
-  }
-  .custom-navbar .navbar-nav-admin .nav-item {
-    margin-bottom: 0.35rem;
-  }
-  .custom-navbar .navbar-nav-admin .nav-link {
-    display: inline-block;
-    width: 100%;
-    padding: 0.6rem 1rem !important;
-  }
-}
-
 /* Original Hero Section from PHP home_admin.php */
 .hero-section {
   background-color: #1e293b;

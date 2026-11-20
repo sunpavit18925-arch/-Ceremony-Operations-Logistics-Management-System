@@ -60,11 +60,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['ne
     }
 }
 
+// Fetch one user's history only when its modal is opened.
+if (isset($_GET['history_user_id'])) {
+    $historyUserId = clean_int($_GET['history_user_id']);
+    $historyPage = max(1, min(1000000, clean_int($_GET['history_page'] ?? 1)));
+    header('Content-Type: application/json; charset=utf-8');
+    if ($historyUserId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'รหัสผู้ใช้ไม่ถูกต้อง']);
+        exit;
+    }
+    session_write_close();
+    $history = $conn->prepare("SELECT action_detail, performed_by, created_at FROM system_logs
+        WHERE action_type = 'CHANGE_ROLE' AND action_detail LIKE :user_tag
+        ORDER BY created_at DESC, id DESC LIMIT 21 OFFSET :offset");
+    $history->bindValue(':user_tag', '%[ID:' . $historyUserId . ']%');
+    $history->bindValue(':offset', ($historyPage - 1) * 20, PDO::PARAM_INT);
+    $history->execute();
+    $rows = $history->fetchAll();
+    echo json_encode(['success' => true, 'data' => array_slice($rows, 0, 20),
+        'page' => $historyPage, 'has_more' => count($rows) > 20], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // 2. Fetch all users
 $users = $conn->query("SELECT * FROM users ORDER BY id DESC")->fetchAll();
-
-// 3. Fetch change role logs
-$role_logs = $conn->query("SELECT * FROM system_logs WHERE action_type = 'CHANGE_ROLE' ORDER BY created_at DESC")->fetchAll();
+$search = clean_string($_GET['search'] ?? '');
 
 // 4. Group users
 $group_op = [];
@@ -77,6 +98,14 @@ $has_head_vehicle = false;
 
 foreach ($users as $u) {
     $r = $u['role'];
+    // Head-role constraints depend on all users, including those outside the search results.
+    if ($r === ROLE_HEAD_OPERATION) $has_head_operation = true;
+    if ($r === ROLE_HEAD_VEHICLE) $has_head_vehicle = true;
+    if ($search !== '') {
+        $searchable = implode(' ', [$u['fname'], $u['lname'], $u['username_sso'] ?? '',
+            $u['email'] ?? '', $u['depart_name'] ?? '', $r, getRoleThai($r)]);
+        if (mb_stripos($searchable, $search, 0, 'UTF-8') === false) continue;
+    }
     if ($r === ROLE_ADMIN || $r === ROLE_SUPER_ADMIN) {
         $group_admin[] = $u;
     } elseif (in_array($r, [ROLE_HEAD_OPERATION, ROLE_STAFF_OPERATION, ROLE_COORDINATOR_OPERATION], true)) {
@@ -134,7 +163,7 @@ function getRoleThai(string $role): string {
     return $roles[$role] ?? $role;
 }
 
-function renderUserTable(array $users_list, array $role_logs, int $page, string $param_name, bool $has_head_op = false, bool $has_head_veh = false) {
+function renderUserTable(array $users_list, int $page, string $param_name, bool $has_head_op = false, bool $has_head_veh = false) {
     $limit = 10;
     $total_items = count($users_list);
     $total_pages = ceil($total_items / $limit);
@@ -223,7 +252,7 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
 
         echo '</td>';
         echo '<td class="text-center pe-4">';
-        echo '<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#logModal' . (int)$row['id'] . '"><i class="bi bi-clock-history"></i> ประวัติ</button>';
+        echo '<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#roleHistoryModal" data-user-id="' . (int)$row['id'] . '" data-user-name="' . $rowName . '"><i class="bi bi-clock-history"></i> ประวัติ</button>';
         echo '</td></tr>';
     }
 
@@ -375,6 +404,7 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
             overflow: hidden;
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
@@ -419,14 +449,15 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                     <h5 class="header-title mb-0">
                         <i class="bi bi-list-ul"></i> รายชื่อผู้ใช้งานในระบบ
                     </h5>
-                    <div class="badge bg-light text-dark border">
-                        ทั้งหมด <?php echo count($users); ?> รายการ
+                    <div id="userTotalCount" class="badge bg-light text-dark border" aria-live="polite">
+                        ทั้งหมด <?php echo count($group_op) + count($group_veh) + count($group_admin) + count($group_pending); ?> รายการ
                     </div>
                 </div>
                 
                 <div class="position-relative w-100" style="max-width: 300px;">
                     <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchUser" class="form-control bg-light border-0 shadow-sm ps-5 py-2" style="border-radius: 20px;" placeholder="ค้นหาชื่อ, บทบาท...">
+                    <input type="text" id="searchUser" class="form-control bg-light border-0 shadow-sm ps-5 py-2" style="border-radius: 20px;" placeholder="ค้นหาชื่อ, บทบาท..." value="<?= e($search) ?>" aria-controls="userRoleAccordion">
+                    <div id="adminSearchStatus" class="small text-danger mt-1" role="status" hidden></div>
                 </div>
             </div>
             
@@ -438,10 +469,10 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                         $p_adm = clean_int($_GET['p_adm'] ?? 1, 1);
                         $p_pen = clean_int($_GET['p_pen'] ?? 1, 1);
                         
-                        $show_op = isset($_GET['p_op']) ? 'show' : '';
-                        $show_veh = isset($_GET['p_veh']) ? 'show' : '';
-                        $show_adm = isset($_GET['p_adm']) ? 'show' : '';
-                        $show_pen = isset($_GET['p_pen']) ? 'show' : '';
+                        $show_op = ($search !== '' ? count($group_op) > 0 : isset($_GET['p_op'])) ? 'show' : '';
+                        $show_veh = ($search !== '' ? count($group_veh) > 0 : isset($_GET['p_veh'])) ? 'show' : '';
+                        $show_adm = ($search !== '' ? count($group_admin) > 0 : isset($_GET['p_adm'])) ? 'show' : '';
+                        $show_pen = ($search !== '' ? count($group_pending) > 0 : isset($_GET['p_pen'])) ? 'show' : '';
                     ?>
                     
                     <!-- 1. ฝ่ายปฏิบัติงาน -->
@@ -451,9 +482,9 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                                 <i class="bi bi-tools text-primary me-2"></i> ฝ่ายปฏิบัติงาน <span class="badge bg-primary ms-2 rounded-pill"><?php echo count($group_op); ?></span>
                             </button>
                         </h2>
-                        <div id="collapseOp" class="accordion-collapse collapse <?php echo $show_op; ?>" data-bs-parent="#userRoleAccordion">
+                        <div id="collapseOp" class="accordion-collapse collapse <?php echo $show_op; ?>">
                             <div class="accordion-body p-0">
-                                <?php renderUserTable($group_op, $role_logs, $p_op, 'p_op', $has_head_operation, $has_head_vehicle); ?>
+                                <?php renderUserTable($group_op, $p_op, 'p_op', $has_head_operation, $has_head_vehicle); ?>
                             </div>
                         </div>
                     </div>
@@ -465,9 +496,9 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                                 <i class="bi bi-truck text-success me-2"></i> ฝ่ายยานยนต์ <span class="badge bg-success ms-2 rounded-pill"><?php echo count($group_veh); ?></span>
                             </button>
                         </h2>
-                        <div id="collapseVeh" class="accordion-collapse collapse <?php echo $show_veh; ?>" data-bs-parent="#userRoleAccordion">
+                        <div id="collapseVeh" class="accordion-collapse collapse <?php echo $show_veh; ?>">
                             <div class="accordion-body p-0">
-                                <?php renderUserTable($group_veh, $role_logs, $p_veh, 'p_veh', $has_head_operation, $has_head_vehicle); ?>
+                                <?php renderUserTable($group_veh, $p_veh, 'p_veh', $has_head_operation, $has_head_vehicle); ?>
                             </div>
                         </div>
                     </div>
@@ -479,9 +510,9 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                                 <i class="bi bi-shield-lock-fill text-dark me-2"></i> ผู้ดูแลระบบ (Admin) <span class="badge bg-dark ms-2 rounded-pill"><?php echo count($group_admin); ?></span>
                             </button>
                         </h2>
-                        <div id="collapseAdm" class="accordion-collapse collapse <?php echo $show_adm; ?>" data-bs-parent="#userRoleAccordion">
+                        <div id="collapseAdm" class="accordion-collapse collapse <?php echo $show_adm; ?>">
                             <div class="accordion-body p-0">
-                                <?php renderUserTable($group_admin, $role_logs, $p_adm, 'p_adm', $has_head_operation, $has_head_vehicle); ?>
+                                <?php renderUserTable($group_admin, $p_adm, 'p_adm', $has_head_operation, $has_head_vehicle); ?>
                             </div>
                         </div>
                     </div>
@@ -493,9 +524,9 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
                                 <i class="bi bi-hourglass-split text-secondary me-2"></i> ผู้ใช้งานรออนุมัติสิทธิ์ <span class="badge bg-secondary ms-2 rounded-pill"><?php echo count($group_pending); ?></span>
                             </button>
                         </h2>
-                        <div id="collapsePen" class="accordion-collapse collapse <?php echo $show_pen; ?>" data-bs-parent="#userRoleAccordion">
+                        <div id="collapsePen" class="accordion-collapse collapse <?php echo $show_pen; ?>">
                             <div class="accordion-body p-0">
-                                <?php renderUserTable($group_pending, $role_logs, $p_pen, 'p_pen', $has_head_operation, $has_head_vehicle); ?>
+                                <?php renderUserTable($group_pending, $p_pen, 'p_pen', $has_head_operation, $has_head_vehicle); ?>
                             </div>
                         </div>
                     </div>
@@ -504,45 +535,23 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
         </div>
     </div>
 
-    <!-- Modals for History Logs -->
-    <?php foreach ($users as $u): ?>
-        <div class="modal fade" id="logModal<?php echo (int)$u['id']; ?>" tabindex="-1" aria-hidden="true">
+    <!-- A shared modal keeps page size independent of the history volume. -->
+        <div class="modal fade" id="roleHistoryModal" tabindex="-1" aria-hidden="true" aria-labelledby="roleHistoryTitle">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header border-bottom">
-                        <h6 class="modal-title fw-bold">
-                            <i class="bi bi-clock-history me-1"></i> ประวัติการเปลี่ยนสิทธิ์: <?php echo e($u['fname'] . ' ' . $u['lname']); ?>
-                        </h6>
+                        <h6 class="modal-title fw-bold" id="roleHistoryTitle">ประวัติการเปลี่ยนสิทธิ์</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-3">
-                        <?php
-                            $user_logs = array_filter($role_logs, function($l) use ($u) {
-                                return strpos($l['action_detail'], "[ID:{$u['id']}]") !== false;
-                            });
-                        ?>
-                        <?php if (empty($user_logs)): ?>
-                            <div class="text-center py-4 text-muted small">
-                                <i class="bi bi-journal-x fs-3 d-block mb-2 opacity-50"></i> ยังไม่มีประวัติการเปลี่ยนสิทธิ์
-                            </div>
-                        <?php else: ?>
-                            <ul class="list-group list-group-flush small">
-                                <?php foreach ($user_logs as $lg): ?>
-                                    <li class="list-group-item px-0 py-2">
-                                        <div class="fw-semibold text-dark"><?php echo e($lg['action_detail']); ?></div>
-                                        <div class="text-muted d-flex justify-content-between mt-1">
-                                            <span>โดย: <?php echo e($lg['performed_by']); ?></span>
-                                            <span><?php echo e($lg['created_at']); ?></span>
-                                        </div>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php endif; ?>
+                    <div class="modal-body p-3" id="roleHistoryBody" aria-live="polite"></div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="historyPrevious">ก่อนหน้า</button>
+                        <span id="historyPage" class="small text-muted"></span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="historyNext">ถัดไป</button>
                     </div>
                 </div>
             </div>
         </div>
-    <?php endforeach; ?>
 
     <?php require 'footer.php'; ?>
 
@@ -572,46 +581,125 @@ function renderUserTable(array $users_list, array $role_logs, int $page, string 
         }
 
         document.addEventListener("DOMContentLoaded", function() {
+            const historyModal = document.getElementById('roleHistoryModal');
+            const historyBody = document.getElementById('roleHistoryBody');
+            const previous = document.getElementById('historyPrevious');
+            const next = document.getElementById('historyNext');
+            let historyUserId, historyPage = 1, historyRequest;
+            async function loadHistory(page) {
+                historyRequest?.abort();
+                const controller = new AbortController();
+                historyRequest = controller;
+                previous.disabled = next.disabled = true;
+                historyBody.textContent = 'กำลังโหลดข้อมูล...';
+                try {
+                    const params = new URLSearchParams({ history_user_id: historyUserId, history_page: page });
+                    const response = await fetch('admin.php?' + params, { signal: controller.signal });
+                    if (!response.ok) throw new Error('โหลดประวัติไม่สำเร็จ');
+                    const result = await response.json();
+                    if (controller.signal.aborted) return;
+                    if (!result.success) throw new Error(result.message);
+                    historyPage = result.page;
+                    historyBody.replaceChildren();
+                    if (!result.data.length) historyBody.textContent = 'ยังไม่มีประวัติการเปลี่ยนสิทธิ์';
+                    for (const log of result.data) {
+                        const item = document.createElement('div');
+                        item.className = 'border-bottom py-2 small';
+                        const detail = document.createElement('div');
+                        detail.className = 'fw-semibold';
+                        detail.textContent = log.action_detail;
+                        const meta = document.createElement('div');
+                        meta.className = 'text-muted';
+                        meta.textContent = `โดย: ${log.performed_by} · ${log.created_at}`;
+                        item.append(detail, meta);
+                        historyBody.append(item);
+                    }
+                    document.getElementById('historyPage').textContent = `หน้า ${historyPage}`;
+                    previous.disabled = historyPage <= 1;
+                    next.disabled = !result.has_more;
+                } catch (error) {
+                    if (error.name !== 'AbortError') historyBody.textContent = 'ไม่สามารถโหลดประวัติได้ กรุณาลองใหม่';
+                }
+            }
+            historyModal.addEventListener('show.bs.modal', event => {
+                historyUserId = event.relatedTarget.dataset.userId;
+                document.getElementById('roleHistoryTitle').textContent = 'ประวัติการเปลี่ยนสิทธิ์: ' + event.relatedTarget.dataset.userName;
+                document.getElementById('historyPage').textContent = '';
+                loadHistory(1);
+            });
+            historyModal.addEventListener('hidden.bs.modal', () => historyRequest?.abort());
+            previous.addEventListener('click', () => loadHistory(historyPage - 1));
+            next.addEventListener('click', () => loadHistory(historyPage + 1));
+
             const searchInput = document.getElementById('searchUser');
             if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const filter = this.value.toLowerCase();
-                    const isSearching = filter.length > 0;
-                    const accordions = document.querySelectorAll('.accordion-item');
+                const root = document.getElementById('userRoleAccordion');
+                const status = document.getElementById('adminSearchStatus');
+                const initialUrl = new URL(window.location.href);
+                const defaults = <?= json_encode([
+                    'collapseOp' => isset($_GET['p_op']), 'collapseVeh' => isset($_GET['p_veh']),
+                    'collapseAdm' => isset($_GET['p_adm']), 'collapsePen' => isset($_GET['p_pen']),
+                ]) ?>;
+                const overrides = new Map();
+                let query = searchInput.value.trim(), timer, request;
+                root.addEventListener('show.bs.collapse', event => overrides.set(event.target.id, true));
+                root.addEventListener('hide.bs.collapse', event => overrides.set(event.target.id, false));
 
-                    accordions.forEach(function(accordion) {
-                        const rows = accordion.querySelectorAll('tbody tr.user-row');
-                        let hasVisibleRow = false;
-
-                        rows.forEach(function(row) {
-                            const textContent = row.textContent.toLowerCase();
-                            if (textContent.includes(filter)) {
-                                row.style.display = '';
-                                hasVisibleRow = true;
-                            } else {
-                                row.style.display = 'none';
-                            }
-                        });
-
-                        const noDataRow = accordion.querySelector('.no-user-found');
-                        if (noDataRow) {
-                            noDataRow.style.display = (!hasVisibleRow && rows.length > 0) ? '' : 'none';
+                async function loadSearch(value, controller) {
+                    const url = new URL(initialUrl);
+                    url.searchParams.delete('success');
+                    url.searchParams.delete('error');
+                    if (value) {
+                        url.searchParams.set('search', value);
+                        for (const key of ['p_op', 'p_veh', 'p_adm', 'p_pen']) url.searchParams.delete(key);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    root.setAttribute('aria-busy', 'true');
+                    status.hidden = true;
+                    try {
+                        const response = await fetch(url, { signal: controller.signal });
+                        if (!response.ok) throw new Error('Search failed');
+                        const parsed = new DOMParser().parseFromString(await response.text(), 'text/html');
+                        if (controller.signal.aborted || value !== query) return;
+                        const updated = parsed.getElementById('userRoleAccordion');
+                        if (!updated) throw new Error('Search response is unavailable');
+                        for (const collapse of root.querySelectorAll('.accordion-collapse')) {
+                            const dispose = () => bootstrap.Collapse.getInstance(collapse)?.dispose();
+                            if (collapse.classList.contains('collapsing')) {
+                                collapse.addEventListener('shown.bs.collapse', dispose, { once: true });
+                                collapse.addEventListener('hidden.bs.collapse', dispose, { once: true });
+                            } else dispose();
                         }
-
-                        const button = accordion.querySelector('.accordion-button');
-                        const collapse = accordion.querySelector('.accordion-collapse');
-                        if (button && collapse) {
-                            if (isSearching && hasVisibleRow) {
-                                button.classList.remove('collapsed');
-                                button.setAttribute('aria-expanded', 'true');
-                                collapse.classList.add('show');
-                            } else {
-                                button.classList.add('collapsed');
-                                button.setAttribute('aria-expanded', 'false');
-                                collapse.classList.remove('show');
-                            }
+                        for (const collapse of updated.querySelectorAll('.accordion-collapse')) {
+                            const open = overrides.has(collapse.id) ? overrides.get(collapse.id)
+                                : value ? collapse.classList.contains('show') : defaults[collapse.id];
+                            collapse.classList.toggle('show', open);
+                            const button = updated.querySelector(`[data-bs-target="#${collapse.id}"]`);
+                            button.classList.toggle('collapsed', !open);
+                            button.setAttribute('aria-expanded', String(open));
                         }
-                    });
+                        root.innerHTML = updated.innerHTML;
+                        document.getElementById('userTotalCount').textContent = parsed.getElementById('userTotalCount').textContent;
+                        window.history.replaceState(null, '', url);
+                    } catch (error) {
+                        if (controller.signal.aborted) return;
+                        status.textContent = 'ค้นหาไม่สำเร็จ กรุณาลองใหม่';
+                        status.hidden = false;
+                    } finally {
+                        if (!controller.signal.aborted) root.removeAttribute('aria-busy');
+                    }
+                }
+                searchInput.addEventListener('input', () => {
+                    const nextQuery = searchInput.value.trim();
+                    if (nextQuery === query) return;
+                    query = nextQuery;
+                    overrides.clear();
+                    clearTimeout(timer);
+                    request?.abort();
+                    request = new AbortController();
+                    const controller = request;
+                    timer = setTimeout(() => loadSearch(nextQuery, controller), 200);
                 });
             }
         });

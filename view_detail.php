@@ -142,6 +142,7 @@ try {
             @page { margin: 1.5cm; size: A4; }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

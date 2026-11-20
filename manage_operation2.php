@@ -8,6 +8,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/queries.php';
 require_once __DIR__ . '/includes/equipment.php';
 require_once __DIR__ . '/controllers/manage_operation_controller.php';
 
@@ -109,13 +110,14 @@ try {
         if ( !empty( $search_status ) ) $query_string .= '&search_status='.urlencode( $search_status );
 
         // 1.5 ดึงข้อมูลผู้ประสานงานที่ถูกมอบหมาย ( Multi-Coordinators ) พร้อมเช็คการรายงานประชุม
-        $all_assigned_coords = $conn->query( "
+        $all_assigned_coords = fetch_for_document_ids($conn, "
             SELECT da.doc_id, da.user_id, da.is_acknowledged, u.fname, u.lname,
                    (SELECT COUNT(*) FROM meeting_reports mr WHERE mr.job_id = da.doc_id) as has_report,
                    (SELECT created_at FROM system_logs sl WHERE sl.job_id = da.doc_id AND sl.action_type = 'ASSIGN_STAFF' AND sl.action_detail LIKE CONCAT('%', u.fname, '%', u.lname, '%') ORDER BY sl.id DESC LIMIT 1) as assigned_date
             FROM document_assignments da
             JOIN users u ON da.user_id = u.id
-        " )->fetchAll();
+            WHERE da.doc_id IN ({document_ids})
+        ", $docs);
 
         $coords_by_doc = [];
         foreach ( $all_assigned_coords as $c ) {
@@ -123,7 +125,8 @@ try {
         }
 
         // 2. ดึงข้อมูลการจัดชุดทั้งหมด
-        $all_assign_for_status = $conn->query( 'SELECT job_id, staff_name, staff_role FROM job_assignments' )->fetchAll();
+        $all_assign_for_status = fetch_for_document_ids($conn,
+            'SELECT job_id, staff_name, staff_role FROM job_assignments WHERE job_id IN ({document_ids})', $docs);
         $assignments_by_job = [];
         foreach ( $all_assign_for_status as $a ) {
             $assignments_by_job[ $a[ 'job_id' ] ][] = $a;
@@ -265,14 +268,15 @@ try {
         $equipments_list = $stmt_equipments->fetchAll(PDO::FETCH_ASSOC);
 
         // --- ดึงข้อมูลการยืมที่มีอยู่แล้วทั้งหมด ---
-        $stmt_borrowings = $conn->query("
+        $page_borrowings = fetch_for_document_ids($conn, "
             SELECT eb.*, e.equipment_name, e.unit 
             FROM equipment_borrowings eb
             JOIN equipments e ON eb.equipment_code = e.equipment_code
+            WHERE eb.job_id IN ({document_ids})
             ORDER BY eb.created_at DESC
-        ");
+        ", $docs);
         $borrowings_by_job = [];
-        foreach ($stmt_borrowings->fetchAll(PDO::FETCH_ASSOC) as $b) {
+        foreach ($page_borrowings as $b) {
             $borrowings_by_job[$b['job_id']][] = $b;
         }
 
@@ -452,6 +456,7 @@ function getBadgeClass( $type ) {
         color: #0d6efd !important;
     }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 
 <body>

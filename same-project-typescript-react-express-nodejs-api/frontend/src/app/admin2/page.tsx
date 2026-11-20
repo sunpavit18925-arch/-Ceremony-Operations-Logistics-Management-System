@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
 import { api } from "@/services/api";
+import { usePagedResource } from "@/hooks/usePagedResource";
+import Pagination from "@/components/Pagination";
+import type { Document } from "@/types";
 
 interface ProvinceData {
   id: number;
@@ -24,8 +27,10 @@ interface ProvinceData {
 
 export default function Admin2Page() {
   const { currentRole, isInitialized } = useDemo();
-  const [docs, setDocs] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const { data: filteredDocs, refresh: fetchDocs, pagination, setPage, loading, error } = usePagedResource<Document>(
+    "/documents", currentRole, search, isInitialized
+  );
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -89,28 +94,6 @@ export default function Admin2Page() {
         console.error("Error loading thai provinces:", err);
       });
   }, []);
-
-  const fetchDocs = useCallback(() => {
-    const load = async () => {
-      const res = await api.getDocuments({}, currentRole);
-      return { res };
-    };
-    return load().then(({ res }) => {
-      if (res.success) {
-        setDocs(res.data);
-      }
-    }).catch((err) => {
-      console.error(err);
-    });
-  }, [currentRole]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    fetchDocs();
-    const handleReset = () => fetchDocs();
-    window.addEventListener("demo-data-reset", handleReset);
-    return () => window.removeEventListener("demo-data-reset", handleReset);
-  }, [fetchDocs, isInitialized]);
 
   // Province dropdown helpers for Add Modal
   const addDistricts = useMemo(() => {
@@ -239,23 +222,6 @@ export default function Admin2Page() {
       setTimeout(() => setErrorMsg(""), 3000);
     }
   };
-
-  const filteredDocs = docs.filter((d: any) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    const docNum = (d.divisionReceiveNumber || d.docNumber || "").toLowerCase();
-    const dName = (d.docName || "").toLowerCase();
-    const vName = (d.venueName || "").toLowerCase();
-    const vProv = (d.venueProvince || "").toLowerCase();
-    const sDocNum = (d.sourceDocNumber || "").toLowerCase();
-    return (
-      docNum.includes(q) ||
-      dName.includes(q) ||
-      vName.includes(q) ||
-      vProv.includes(q) ||
-      sDocNum.includes(q)
-    );
-  });
 
   const getBadgeClass = (jobType: string) => {
     switch (jobType) {
@@ -606,6 +572,8 @@ export default function Admin2Page() {
                     </tbody>
                   </table>
                 </div>
+                {error && <div className="alert alert-danger m-3" role="alert">{error}</div>}
+                <Pagination info={pagination} onPageChange={setPage} loading={loading} />
               </div>
             </div>
           </div>

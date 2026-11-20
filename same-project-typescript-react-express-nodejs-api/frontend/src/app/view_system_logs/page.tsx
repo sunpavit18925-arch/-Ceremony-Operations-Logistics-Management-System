@@ -1,47 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useDemo } from "@/context/DemoContext";
+import { usePagedResource } from "@/hooks/usePagedResource";
+import Pagination from "@/components/Pagination";
+import type { SystemLog } from "@/types";
 
 export default function ViewSystemLogsPage() {
-  const { currentRole } = useDemo();
-  const [logs, setLogs] = useState([]);
+  const { currentRole, isInitialized } = useDemo();
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const fetchLogs = useCallback(() => {
-    const load = async () => {
-      const res = await fetch("http://localhost:4000/api/demo/logs", {
-        headers: { "x-demo-role": currentRole }
-      });
-      const data = await res.json();
-      return { res, data };
-    };
-    return load().then(({ res, data }) => {
-      if (data.success) {
-        setLogs(data.data);
-      }
-    }).catch((err) => {
-      console.error(err);
-    }).finally(() => {
-      setLoading(false);
-    });
-  }, [currentRole]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
-
-  const filteredLogs = logs.filter(l => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      l.action?.toLowerCase().includes(q) ||
-      l.detail?.toLowerCase().includes(q) ||
-      l.user?.toLowerCase().includes(q)
-    );
-  });
+  const { data: filteredLogs, pagination, setPage, loading, error } = usePagedResource<SystemLog>(
+    "/logs", currentRole, searchQuery, isInitialized
+  );
 
   const getActionBadge = (action) => {
     if (action.includes("CREATE") || action.includes("ADD")) {
@@ -93,10 +64,10 @@ export default function ViewSystemLogsPage() {
             <div>
               <h5 className="fw-bold text-dark mb-0 d-inline-block me-2">รายการอัปเดตข้อมูล</h5>
               <span className="badge bg-primary rounded-pill align-text-bottom">
-                ทั้งหมด {filteredLogs.length} รายการ
+                ทั้งหมด {pagination.total} รายการ
               </span>
             </div>
-            <div className="position-relative" style={{ minWidth: "280px" }}>
+            <div className="position-relative" style={{ width: "100%", maxWidth: "320px" }}>
               <span className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted">
                 <i className="bi bi-search"></i>
               </span>
@@ -111,7 +82,8 @@ export default function ViewSystemLogsPage() {
             </div>
           </div>
 
-          <div className="card-body p-0">
+          {error && <div className="alert alert-danger m-3" role="alert">{error}</div>}
+          <div className="card-body p-0" aria-busy={loading}>
             <div className="table-responsive">
               <table className="table table-custom table-hover align-middle mb-0">
                 <thead>
@@ -127,7 +99,7 @@ export default function ViewSystemLogsPage() {
                     <tr>
                       <td colSpan={4} className="text-center py-5 text-muted">
                         <i className="bi bi-clock-history fs-1 d-block mb-2 text-secondary"></i>
-                        ไม่พบบันทึกประวัติระบบ
+                        {loading ? "กำลังโหลดข้อมูล..." : "ไม่พบบันทึกประวัติระบบ"}
                       </td>
                     </tr>
                   ) : (
@@ -157,6 +129,7 @@ export default function ViewSystemLogsPage() {
               </table>
             </div>
           </div>
+          <Pagination info={pagination} onPageChange={setPage} loading={loading} />
         </div>
       </div>
     </div>

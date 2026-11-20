@@ -177,6 +177,7 @@ foreach ($vehicles_db as $v) {
         .cursor-not-allowed { cursor: not-allowed; background-color: #e9ecef; }
         .search-bar-container { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; padding: 15px 25px; }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

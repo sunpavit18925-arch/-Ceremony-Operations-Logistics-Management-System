@@ -51,6 +51,7 @@ require_role([ROLE_STAFF_VEHICLE, ROLE_SUPER_ADMIN]);
             .alert-lg span { font-size: 0.9rem !important; }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

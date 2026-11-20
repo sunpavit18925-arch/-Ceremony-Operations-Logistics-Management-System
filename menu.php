@@ -107,56 +107,9 @@ if (empty($user_display_name)) {
 }
 
 /* เมนู Role Admin จัดให้อยู่ตรงกลางของ Navbar */
-@media (min-width: 992px) {
-    .custom-navbar .container-fluid {
-        position: relative;
-    }
-    .custom-navbar .navbar-nav-admin {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        margin: 0 !important;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        z-index: 1025;
-        list-style: none;
-        padding-left: 0;
-    }
-    .custom-navbar .navbar-nav-admin .nav-link {
-        white-space: nowrap;
-        padding-left: 1.25rem !important;
-        padding-right: 1.25rem !important;
-    }
-}
-@media (min-width: 992px) and (max-width: 1199.98px) {
-    .custom-navbar .navbar-nav-admin .nav-link {
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-    }
-}
-@media (max-width: 991.98px) {
-    .custom-navbar .navbar-nav-admin {
-        width: 100%;
-        text-align: center;
-        margin: 0.5rem 0 1rem 0 !important;
-        padding-left: 0;
-        list-style: none;
-    }
-    .custom-navbar .navbar-nav-admin .nav-item {
-        margin-bottom: 0.35rem;
-    }
-    .custom-navbar .navbar-nav-admin .nav-link {
-        display: inline-block;
-        width: 100%;
-        padding: 0.6rem 1rem !important;
-    }
-}
 </style>
 
-<nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+<nav class="navbar navbar-expand-xxl navbar-dark custom-navbar">
     <div class="container-fluid px-3">
         <div class="d-flex align-items-center">
             <a class="navbar-brand fw-semibold d-flex align-items-center me-2 me-xl-3" href="welcome.php">
@@ -169,7 +122,7 @@ if (empty($user_display_name)) {
 
             <?php if ($user_role === 'super_admin'): ?>
                 <!-- Super Admin Section Switcher (Desktop Left) -->
-                <div class="dropdown d-none d-lg-block">
+                <div class="dropdown d-none d-xxl-block">
                     <button class="btn btn-sm btn-outline-warning dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; font-size: 0.82rem; padding: 0.35rem 0.65rem;">
                         <i class="bi bi-grid-fill me-1"></i> โซนระบบ
                     </button>
@@ -196,7 +149,7 @@ if (empty($user_display_name)) {
         </button>
 
         <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="navbarContent" aria-labelledby="navbarContentLabel">
-            <div class="offcanvas-header border-bottom border-secondary d-lg-none">
+            <div class="offcanvas-header border-bottom border-secondary d-xxl-none">
                 <h5 class="offcanvas-title" id="navbarContentLabel">
                     <i class="bi bi-person-circle me-1"></i> 
                     <?php if (!empty($user_display_name)): ?>
@@ -211,10 +164,10 @@ if (empty($user_display_name)) {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
             </div>
 
-            <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center w-100">
+            <div class="offcanvas-body d-flex flex-column flex-xxl-row align-items-xxl-center w-100">
                 <?php if ($user_role === 'super_admin'): ?>
                     <!-- Super Admin Section Switcher (Mobile Drawer) -->
-                    <div class="dropdown d-lg-none mb-3">
+                    <div class="dropdown d-xxl-none mb-3">
                         <button class="btn btn-sm btn-outline-warning dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.5rem 0.75rem;">
                             <span><i class="bi bi-grid-fill me-1"></i> โซนระบบ</span>
                         </button>
@@ -235,7 +188,7 @@ if (empty($user_display_name)) {
                     </div>
                 <?php endif; ?>
 
-                <ul class="navbar-nav <?php echo $is_admin_zone ? 'navbar-nav-admin' : 'mx-auto'; ?> mb-2 mb-lg-0">
+                <ul class="navbar-nav <?php echo $is_admin_zone ? 'navbar-nav-admin' : 'mx-auto'; ?> mb-2 mb-xxl-0">
                     <?php if ($is_admin_zone): ?>
                         <li class="nav-item mx-1">
                             <a class="nav-link <?php echo $current_page === 'home_admin.php' ? 'active' : ''; ?>" href="home_admin.php">
@@ -338,8 +291,8 @@ if (empty($user_display_name)) {
                     <?php endif; ?>
                 </ul>
 
-                <div class="d-flex align-items-center ms-lg-auto mt-3 mt-lg-0">
-                    <div class="text-white text-end me-3 d-none d-lg-block">
+                <div class="d-flex align-items-center ms-xxl-auto mt-3 mt-xxl-0">
+                    <div class="text-white text-end me-3 d-none d-xxl-block">
                         <?php if (!empty($user_display_name)): ?>
                             <div class="fw-semibold small" style="line-height: 1.2;">
                                 <?php echo e($user_display_name); ?>

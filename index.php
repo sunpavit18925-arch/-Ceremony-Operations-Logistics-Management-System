@@ -93,6 +93,7 @@ $isDemo = is_demo_mode();
             margin-bottom: 6px;
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
     <div class="login-card">

@@ -49,6 +49,7 @@ require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]);
             .hero-subtitle { font-size: 0.95rem; }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

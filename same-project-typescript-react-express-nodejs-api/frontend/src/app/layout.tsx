@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./responsive.css";
 import React, { ReactNode } from "react";
 import { DemoProvider } from "@/context/DemoContext";
 import Navbar from "@/components/layout/Navbar";

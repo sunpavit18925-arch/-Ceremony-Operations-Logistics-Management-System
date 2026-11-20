@@ -13,17 +13,8 @@ export default function AdminPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [historyModalUser, setHistoryModalUser] = useState(null);
 
-  // Accordion active sections
-  const [openSections, setOpenSections] = useState({
-    op: true,
-    veh: true,
-    adm: true,
-    pen: true
-  });
-
-  const toggleSection = (key) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev [key] }));
-  };
+  // Search supplies the initial expansion; manual toggles override it until the query changes.
+  const [sectionOverrides, setSectionOverrides] = useState<Partial<Record<"op" | "veh" | "adm" | "pen", boolean>>>({});
 
   const fetchUsers = useCallback(() => {
     const load = async () => {
@@ -94,26 +85,34 @@ export default function AdminPage() {
   const isSuperAdmin = currentRole === "super_admin";
 
   // Grouping users
-  const filtered = users.filter(u => {
-    const q = search.toLowerCase();
-    return (
-      (u.name && u.name.toLowerCase().includes(q)) ||
-      (u.username && u.username.toLowerCase().includes(q)) ||
-      (u.department && u.department.toLowerCase().includes(q))
-    );
-  });
+  const query = search.trim().toLowerCase();
+  const filtered = users.filter(u => !query ||
+    [u.name, `${u.fname || ""} ${u.lname || ""}`, u.username, u.email, u.department, u.role, getRoleThai(u.role)]
+      .some(value => value?.toLowerCase().includes(query))
+  );
 
   const group_admin = filtered.filter(u => u.role === "admin" || u.role === "super_admin");
   const group_op = filtered.filter(u => ["head_operation", "staff_operation", "coordinator_operation"].includes(u.role));
   const group_veh = filtered.filter(u => ["head_vehicle", "staff_vehicle"].includes(u.role));
   const group_pending = filtered.filter(u => u.role === "pending");
 
+  const openSections = {
+    op: !query || group_op.length > 0,
+    veh: !query || group_veh.length > 0,
+    adm: !query || group_admin.length > 0,
+    pen: !query || group_pending.length > 0,
+    ...sectionOverrides
+  };
+  const toggleSection = (key: keyof typeof openSections) => {
+    setSectionOverrides(previous => ({ ...previous, [key]: !openSections[key] }));
+  };
+
   const renderTable = (userList) => {
     if (userList.length === 0) {
       return (
         <div className="text-center py-5 text-muted">
           <i className="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
-          ยังไม่มีข้อมูลผู้ใช้งานในกลุ่มนี้
+          {query ? "ไม่พบผู้ใช้งานที่ตรงกับคำค้นหาในกลุ่มนี้" : "ยังไม่มีข้อมูลผู้ใช้งานในกลุ่มนี้"}
         </div>
       );
     }
@@ -325,7 +324,7 @@ export default function AdminPage() {
                 <i className="bi bi-list-ul"></i> รายชื่อผู้ใช้งานในระบบ
               </h5>
               <div className="badge bg-light text-dark border">
-                ทั้งหมด {users.length} รายการ
+                ทั้งหมด {filtered.length} รายการ
               </div>
             </div>
 
@@ -340,7 +339,10 @@ export default function AdminPage() {
                 style={{ borderRadius: "20px" }}
                 placeholder="ค้นหาชื่อ, บทบาท..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setSectionOverrides({});
+                }}
               />
             </div>
           </div>
@@ -354,6 +356,8 @@ export default function AdminPage() {
                     className={`accordion-button ${openSections.op ? '' : 'collapsed'}`}
                     type="button"
                     onClick={() => toggleSection('op')}
+                    aria-expanded={openSections.op}
+                    aria-controls="adminOperationUsers"
                     style={{
                       backgroundColor: openSections.op ? "var(--app-muted-bg)" : "transparent",
                       color: "var(--app-heading)",
@@ -364,7 +368,7 @@ export default function AdminPage() {
                   </button>
                 </h2>
                 {openSections.op && (
-                  <div className="accordion-collapse collapse show">
+                  <div id="adminOperationUsers" className="accordion-collapse collapse show">
                     <div className="accordion-body p-0">
                       {renderTable(group_op)}
                     </div>
@@ -379,6 +383,8 @@ export default function AdminPage() {
                     className={`accordion-button ${openSections.veh ? '' : 'collapsed'}`}
                     type="button"
                     onClick={() => toggleSection('veh')}
+                    aria-expanded={openSections.veh}
+                    aria-controls="adminVehicleUsers"
                     style={{
                       backgroundColor: openSections.veh ? "var(--app-muted-bg)" : "transparent",
                       color: "var(--app-heading)",
@@ -389,7 +395,7 @@ export default function AdminPage() {
                   </button>
                 </h2>
                 {openSections.veh && (
-                  <div className="accordion-collapse collapse show">
+                  <div id="adminVehicleUsers" className="accordion-collapse collapse show">
                     <div className="accordion-body p-0">
                       {renderTable(group_veh)}
                     </div>
@@ -404,6 +410,8 @@ export default function AdminPage() {
                     className={`accordion-button ${openSections.adm ? '' : 'collapsed'}`}
                     type="button"
                     onClick={() => toggleSection('adm')}
+                    aria-expanded={openSections.adm}
+                    aria-controls="adminAdministratorUsers"
                     style={{
                       backgroundColor: openSections.adm ? "var(--app-muted-bg)" : "transparent",
                       color: "var(--app-heading)",
@@ -414,7 +422,7 @@ export default function AdminPage() {
                   </button>
                 </h2>
                 {openSections.adm && (
-                  <div className="accordion-collapse collapse show">
+                  <div id="adminAdministratorUsers" className="accordion-collapse collapse show">
                     <div className="accordion-body p-0">
                       {renderTable(group_admin)}
                     </div>
@@ -429,6 +437,8 @@ export default function AdminPage() {
                     className={`accordion-button ${openSections.pen ? '' : 'collapsed'}`}
                     type="button"
                     onClick={() => toggleSection('pen')}
+                    aria-expanded={openSections.pen}
+                    aria-controls="adminPendingUsers"
                     style={{
                       backgroundColor: openSections.pen ? "var(--app-muted-bg)" : "transparent",
                       color: "var(--app-heading)",
@@ -439,7 +449,7 @@ export default function AdminPage() {
                   </button>
                 </h2>
                 {openSections.pen && (
-                  <div className="accordion-collapse collapse show">
+                  <div id="adminPendingUsers" className="accordion-collapse collapse show">
                     <div className="accordion-body p-0">
                       {renderTable(group_pending)}
                     </div>

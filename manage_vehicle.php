@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/queries.php';
 require_once __DIR__ . '/includes/security.php';
 
 require_role([ROLE_HEAD_VEHICLE, ROLE_SUPER_ADMIN, ROLE_STAFF_VEHICLE]);
@@ -152,23 +153,12 @@ $job_dates = $stmt_dates->fetch(PDO::FETCH_ASSOC);
 $current_start = $job_dates['dpt_work_start'] ?? null;
 $current_end = $job_dates['dpt_work_end'] ?? null;
 
+$overlaps_by_driver = fetch_driver_overlaps($conn, $job_id, $current_start, $current_end);
+
 $veh_staff = [];
 foreach ($veh_staff_raw as $v) {
     $driver_name = $v['fname'] . ' ' . $v['lname'];
-    $overlapping_jobs = [];
-    
-    if ($current_start && $current_end) {
-        $stmt_overlap = $conn->prepare("
-            SELECT d.doc_name, d.dpt_work_start, d.dpt_work_end 
-            FROM vehicle_assignments va
-            JOIN documents d ON va.job_id = d.id
-            WHERE va.driver_name = ?
-              AND d.id != ?
-              AND d.dpt_work_start <= ? AND d.dpt_work_end >= ?
-        ");
-        $stmt_overlap->execute([$driver_name, $job_id, $current_end, $current_start]);
-        $overlapping_jobs = $stmt_overlap->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $overlapping_jobs = $overlaps_by_driver[(int)$v['id']] ?? [];
     
     $veh_staff[] = [
         'id' => $v['id'],
@@ -245,6 +235,7 @@ $assigned_vehicles = $stmt_saved->fetchAll();
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการยานพาหนะ - ระบบพับพลาพิธี</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -380,6 +371,7 @@ $assigned_vehicles = $stmt_saved->fetchAll();
         #main-content { display: none; }
         <?php endif; ?>
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

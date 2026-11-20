@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/csrf.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/queries.php';
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/equipment.php';
 
@@ -36,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $job_id = clean_int($_POST['job_id'] ?? 0);
     $page = clean_int($_GET['page'] ?? 1);
 
-    $res = equipment_return($conn, $borrow_id);
+    $res = equipment_return($conn, $borrow_id, 0, (int)$_SESSION['user_id'], $user_role, $_SESSION['username'] ?? 'system');
     if ($res['success']) {
         header("Location: select_mission.php?page={$page}&return_success=1&open_modal={$job_id}");
     } else {
@@ -83,14 +84,15 @@ $stmt_equipments = $conn->query("SELECT * FROM equipments ORDER BY equipment_cat
 $equipments_list = $stmt_equipments->fetchAll(PDO::FETCH_ASSOC);
 
 // --- ดึงข้อมูลการยืมที่มีอยู่แล้วทั้งหมด ---
-$stmt_borrowings = $conn->query("
+$page_borrowings = fetch_for_document_ids($conn, "
     SELECT eb.*, e.equipment_name, e.unit 
     FROM equipment_borrowings eb
     JOIN equipments e ON eb.equipment_code = e.equipment_code
+    WHERE eb.job_id IN ({document_ids})
     ORDER BY eb.created_at DESC
-");
+", $documents);
 $borrowings_by_job = [];
-foreach ($stmt_borrowings->fetchAll(PDO::FETCH_ASSOC) as $b) {
+foreach ($page_borrowings as $b) {
     $borrowings_by_job[$b['job_id']][] = $b;
 }
 ?>
@@ -204,6 +206,7 @@ foreach ($stmt_borrowings->fetchAll(PDO::FETCH_ASSOC) as $b) {
             .search-container { max-width: 100% !important; }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

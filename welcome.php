@@ -127,6 +127,7 @@ switch ($userRole) {
             color: white;
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
     <div class="welcome-card">

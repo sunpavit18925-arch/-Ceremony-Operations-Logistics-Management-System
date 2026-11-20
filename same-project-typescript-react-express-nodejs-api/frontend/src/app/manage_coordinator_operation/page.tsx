@@ -34,7 +34,7 @@ export default function ManageCoordinatorOperationPage() {
 
   const fetchLogs = useCallback(() => {
     const load = async () => {
-      const res = await fetch("http://localhost:4000/api/demo/logs", {
+      const res = await fetch("http://localhost:4000/api/demo/logs?actions=ASSIGN_COORD,REVOKE_COORD,ASSIGN_COORDINATOR&limit=50", {
         headers: { "x-demo-role": currentRole }
       });
       const data = await res.json();

@@ -61,6 +61,7 @@ try {
             .hero-subtitle { font-size: 0.95rem; }
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 

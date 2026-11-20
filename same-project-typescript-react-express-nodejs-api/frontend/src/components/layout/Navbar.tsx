@@ -61,13 +61,67 @@ export default function Navbar() {
   const handleZoneSelect = (zone: string, targetUrl: string) => {
     setEffectiveZone(zone);
     setDropdownOpen(false);
+    setMobileMenuOpen(false);
     router.push(targetUrl);
   };
 
   const displayName = currentUser ? `${currentUser.fname || ''} ${currentUser.lname || ''}`.trim() : "";
 
+  const renderZoneSwitcher = (mobile: boolean) => (
+    <div className={`dropdown position-relative ${mobile ? "d-xxl-none my-3" : "d-none d-xxl-block"}`}>
+      <button
+        className="btn btn-sm btn-outline-warning dropdown-toggle d-flex align-items-center"
+        type="button"
+        aria-expanded={dropdownOpen}
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+        style={{ borderRadius: "8px", fontSize: "0.82rem", padding: "0.35rem 0.65rem" }}
+      >
+        <i className="bi bi-grid-fill me-1"></i> โซนระบบ
+      </button>
+      {dropdownOpen && (
+        <ul className="dropdown-menu shadow show position-absolute mt-1" style={{ zIndex: 1050 }}>
+          <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-gear-fill me-1"></i> โซนผู้ดูแลระบบ</h6></li>
+          <li>
+            <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_admin') ? 'active' : ''}`} onClick={() => handleZoneSelect('admin', '/home_admin')}>
+              <i className="bi bi-person-gear me-2"></i>ผู้ดูแลระบบ (Admin)
+            </button>
+          </li>
+
+          <li><hr className="dropdown-divider" /></li>
+          <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-building me-1"></i> โซนฝ่ายปฏิบัติการ</h6></li>
+          <li>
+            <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_head_operation') ? 'active' : ''}`} onClick={() => handleZoneSelect('head_operation', '/home_head_operation')}>
+              <i className="bi bi-person-badge me-2"></i>หัวหน้าฝ่ายปฏิบัติการ
+            </button>
+          </li>
+          <li>
+            <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_operation') ? 'active' : ''}`} onClick={() => handleZoneSelect('coordinator_operation', '/home_operation')}>
+              <i className="bi bi-people me-2"></i>ฝ่ายปฏิบัติการ
+            </button>
+          </li>
+
+          <li><hr className="dropdown-divider" /></li>
+          <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-truck me-1"></i> โซนฝ่ายยานยนต์</h6></li>
+          <li>
+            <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_head_vehicle') ? 'active' : ''}`} onClick={() => handleZoneSelect('head_vehicle', '/home_head_vehicle')}>
+              <i className="bi bi-person-badge me-2"></i>หัวหน้าฝ่ายยานยนต์
+            </button>
+          </li>
+          <li>
+            <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_vehicle') ? 'active' : ''}`} onClick={() => handleZoneSelect('staff_vehicle', '/home_vehicle')}>
+              <i className="bi bi-car-front me-2"></i>ฝ่ายยานยนต์
+            </button>
+          </li>
+        </ul>
+      )}
+    </div>
+  );
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark custom-navbar">
+    <nav className="navbar navbar-expand-xxl navbar-dark custom-navbar"
+      onKeyDown={(event) => { if (event.key === "Escape") { setMobileMenuOpen(false); setDropdownOpen(false); } }}
+      onClick={(event) => { if ((event.target as HTMLElement).closest("a")) { setMobileMenuOpen(false); setDropdownOpen(false); } }}
+    >
       <div className="container-fluid px-3">
         <div className="d-flex align-items-center">
           <Link className="navbar-brand fw-semibold d-flex align-items-center me-2 me-xl-3" href="/welcome">
@@ -80,66 +134,23 @@ export default function Navbar() {
             )}
           </Link>
 
-          {isSuperAdmin && (
-            <div className="dropdown d-none d-lg-block position-relative">
-              <button
-                className="btn btn-sm btn-outline-warning dropdown-toggle d-flex align-items-center"
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                style={{ borderRadius: "8px", fontSize: "0.82rem", padding: "0.35rem 0.65rem" }}
-              >
-                <i className="bi bi-grid-fill me-1"></i> โซนระบบ
-              </button>
-              {dropdownOpen && (
-                <ul className="dropdown-menu shadow show position-absolute mt-1" style={{ zIndex: 1050 }}>
-                  <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-gear-fill me-1"></i> โซนผู้ดูแลระบบ</h6></li>
-                  <li>
-                    <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_admin') ? 'active' : ''}`} onClick={() => handleZoneSelect('admin', '/home_admin')}>
-                      <i className="bi bi-person-gear me-2"></i>ผู้ดูแลระบบ (Admin)
-                    </button>
-                  </li>
-
-                  <li><hr className="dropdown-divider" /></li>
-                  <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-building me-1"></i> โซนฝ่ายปฏิบัติการ</h6></li>
-                  <li>
-                    <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_head_operation') ? 'active' : ''}`} onClick={() => handleZoneSelect('head_operation', '/home_head_operation')}>
-                      <i className="bi bi-person-badge me-2"></i>หัวหน้าฝ่ายปฏิบัติการ
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_operation') ? 'active' : ''}`} onClick={() => handleZoneSelect('coordinator_operation', '/home_operation')}>
-                      <i className="bi bi-people me-2"></i>ฝ่ายปฏิบัติการ
-                    </button>
-                  </li>
-
-                  <li><hr className="dropdown-divider" /></li>
-                  <li><h6 className="dropdown-header text-primary fw-bold"><i className="bi bi-truck me-1"></i> โซนฝ่ายยานยนต์</h6></li>
-                  <li>
-                    <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_head_vehicle') ? 'active' : ''}`} onClick={() => handleZoneSelect('head_vehicle', '/home_head_vehicle')}>
-                      <i className="bi bi-person-badge me-2"></i>หัวหน้าฝ่ายยานยนต์
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" className={`dropdown-item ps-4 ${pathname.includes('home_vehicle') ? 'active' : ''}`} onClick={() => handleZoneSelect('staff_vehicle', '/home_vehicle')}>
-                      <i className="bi bi-car-front me-2"></i>ฝ่ายยานยนต์
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </div>
-          )}
+          {isSuperAdmin && renderZoneSwitcher(false)}
         </div>
 
         <button
           className="navbar-toggler border-0 shadow-none"
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle navigation"
+          aria-controls="primary-navigation"
+          aria-expanded={mobileMenuOpen}
         >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        <div className={`collapse navbar-collapse ${mobileMenuOpen ? "show" : ""} justify-content-between`}>
-          <ul className={`navbar-nav ${activeRole === 'admin' ? 'navbar-nav-admin' : 'mx-auto'} mb-2 mb-lg-0`}>
+        <div id="primary-navigation" className={`collapse navbar-collapse ${mobileMenuOpen ? "show" : ""} justify-content-between`}>
+          {isSuperAdmin && renderZoneSwitcher(true)}
+          <ul className={`navbar-nav ${activeRole === 'admin' ? 'navbar-nav-admin' : 'mx-auto'} mb-2 mb-xxl-0`}>
             {activeRole === 'admin' && (
               <>
                 <li className="nav-item mx-1">
@@ -257,8 +268,8 @@ export default function Navbar() {
             )}
           </ul>
 
-          <div className="d-flex align-items-center ms-lg-auto mt-3 mt-lg-0">
-            <div className="text-white text-end me-3 d-none d-lg-block">
+          <div className="d-flex align-items-center ms-xxl-auto mt-3 mt-xxl-0">
+            <div className="text-white text-end me-3 d-none d-xxl-block">
               <div className="fw-semibold small" style={{ lineHeight: 1.2 }}>
                 {displayName}
               </div>

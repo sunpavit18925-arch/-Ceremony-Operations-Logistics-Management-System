@@ -129,7 +129,7 @@ function equipment_return(PDO $conn, int $borrowId, int $jobId = 0, int $userId 
 
         // Concurrency-safe state transition: status 'borrowed' -> 'returned'
         $stmtUpdateBorrow = $conn->prepare("UPDATE equipment_borrowings SET status = 'returned', returned_at = NOW(), returned_by = ? WHERE id = ? AND status = 'borrowed'");
-        $stmtUpdateBorrow->execute([$performedBy, $borrowId]);
+        $stmtUpdateBorrow->execute([$userId > 0 ? $userId : null, $borrowId]);
 
         if ($stmtUpdateBorrow->rowCount() !== 1) {
             throw new Exception("รายการนี้ถูกคืนไปแล้วโดยคำขออื่น (ป้องกันการเพิ่มสต็อกซ้ำซ้อน)");
