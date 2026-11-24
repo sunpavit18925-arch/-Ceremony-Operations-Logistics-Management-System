@@ -23,20 +23,20 @@
 *.bak
 
 # Allow the application schema, synthetic demo seeds, and public province data
-!/database/schema.sql
-!/database/seeds.sql
+!/php/database/schema.sql
+!/php/database/seeds.sql
 !**/thai-province-data-master/formats/sql/*.sql
 
 # Uploaded documents (retain directory protection and gitkeeps)
-/uploads/**
-!/uploads/**/
-!/uploads/**/.htaccess
-!/uploads/**/.gitkeep
+/php/uploads/**
+!/php/uploads/**/
+!/php/uploads/**/.htaccess
+!/php/uploads/**/.gitkeep
 
 # Temporary test uploads
-/tests/test_uploads/*
-!/tests/test_uploads/.htaccess
-!/tests/test_uploads/.gitkeep
+/php/tests/test_uploads/*
+!/php/tests/test_uploads/.htaccess
+!/php/tests/test_uploads/.gitkeep
 
 # Dependencies and generated build/test output
 node_modules/
@@ -81,12 +81,12 @@ Desktop.ini
 
 # Downloaded comparison project and old local TypeScript copies
 /pabpla_test3/
-/typescript/backend tsx/
-/typescript/frontend tsx/
+/project-typescript-react-express-nodejs-api/backend tsx/
+/project-typescript-react-express-nodejs-api/frontend tsx/
 
 # Local screenshots and unused large legacy artwork
 /img/
-/images/happy.png
+/php/images/happy.png
 
 # Machine-specific comparison and archive reports
 /tools/*-report.json

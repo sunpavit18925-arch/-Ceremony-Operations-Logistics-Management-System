@@ -1,0 +1,29 @@
+# Local settings and private database data
+.env
+.env.*
+!.env.example
+*.sql
+*.sql.gz
+*.dump
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+!/database/schema.sql
+!/database/seeds.sql
+!**/thai-province-data-master/formats/sql/*.sql
+
+# Uploads: keep protection files and empty directories only
+/uploads/**
+!/uploads/**/
+!/uploads/**/.htaccess
+!/uploads/**/.gitkeep
+/tests/test_uploads/*
+!/tests/test_uploads/.htaccess
+!/tests/test_uploads/.gitkeep
+
+# Local legacy artwork and generated output
+/images/happy.png
+*.log
+error_log
+test-results/
